@@ -127,10 +127,10 @@ Abre en el navegador:
 - `http://localhost:3010` — interfaz principal de chat para hablar con Daimon. Desde aquí se crean conversaciones, se envían mensajes y se usa el flujo normal del sistema con modo protegido, local o remoto.
 ![Web Chat](./public/assets/web_daimon_chat.png)
 
-- `http://localhost:3010/config` — panel de configuración para modelos, reglas, prompts, RAG y opciones generales. Desde aquí se ajusta el comportamiento del saneado, la conexión con los servicios y las opciones del sistema.
+- `http://localhost:3010/debug` — vista de depuración para ver qué se sanea, qué sale al remoto y cómo responde el pipeline. Es la pantalla útil para inspeccionar el proceso interno y validar que la protección está funcionando como esperas.
 ![Web Debug](./public/assets/web_daimon_debug.png)
 
-- `http://localhost:3010/debug` — vista de depuración para ver qué se sanea, qué sale al remoto y cómo responde el pipeline. Es la pantalla útil para inspeccionar el proceso interno y validar que la protección está funcionando como esperas.
+- `http://localhost:3010/config` — panel de configuración para modelos, reglas, prompts, RAG y opciones generales. Desde aquí se ajusta el comportamiento del saneado, la conexión con los servicios y las opciones del sistema.
 ![Web Config](./public/assets/web_daimon_config.png)
 
 Credenciales iniciales del panel de configuración:
