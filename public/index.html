@@ -1,0 +1,1785 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Daimon</title>
+    <link rel="icon" type="image/png" href="/assets/daimon-favicon.png" />
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, sans-serif;
+        background: #0b1020;
+        color: #e8ecf3;
+        overflow-x: hidden;
+      }
+      .app {
+        min-height: 100vh;
+      }
+      .sidebar {
+        width: 248px;
+        height: 100vh;
+        box-sizing: border-box;
+        padding: 14px 12px 14px 6px;
+        background: linear-gradient(180deg, #0e1429, #0b1020);
+        border-right: 1px solid #243158;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        transition: width 0.2s ease, padding 0.2s ease;
+      }
+      .sidebar-toggle {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+        padding: 9px 10px 9px 8px;
+        border: 0;
+        border-radius: 12px;
+        background: transparent;
+        color: #cfd8f6;
+        font: inherit;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background 0.18s ease, color 0.18s ease;
+      }
+      .sidebar-toggle:hover {
+        background: rgba(255,255,255,0.06);
+        color: #ffffff;
+      }
+      .sidebar-toggle svg {
+        width: 22px;
+        height: 22px;
+        flex: 0 0 auto;
+        fill: currentColor;
+      }
+      .sidebar-label {
+        display: inline-block;
+        min-width: 0;
+      }
+      .sidebar-actions {
+        display: grid;
+        gap: 4px;
+        justify-items: stretch;
+      }
+      .sidebar-button {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+        padding: 9px 10px 9px 8px;
+        border-radius: 12px;
+        border: 0;
+        background: transparent;
+        color: #cfd8f6;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 500;
+        text-align: left;
+        transition: background 0.18s ease, color 0.18s ease;
+      }
+      .sidebar-button:hover {
+        background: rgba(255,255,255,0.06);
+        color: #ffffff;
+      }
+      .sidebar-button.active {
+        background: rgba(255,255,255,0.08);
+        color: #ffffff;
+      }
+      .sidebar-button.rag-button.active {
+        background: rgba(102, 187, 106, 0.18);
+        color: #cbf6cf;
+      }
+      #deepMode.active {
+        background: rgba(74, 144, 226, 0.24);
+        color: #9fcbff;
+      }
+      #deepMode.active:hover {
+        background: rgba(74, 144, 226, 0.32);
+        color: #c7e2ff;
+      }
+      .sidebar-button svg {
+        width: 22px;
+        height: 22px;
+        flex: 0 0 auto;
+        fill: currentColor;
+      }
+      .recent-chats {
+        margin-top: auto;
+        padding: 16px 0 0;
+        display: grid;
+        gap: 6px;
+      }
+      .recent-chats-title {
+        padding: 0 8px;
+        color: #91a1c8;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .recent-chat-list {
+        display: grid;
+        gap: 2px;
+        width: 100%;
+        min-width: 0;
+      }
+      .recent-chat-button {
+        width: 100%;
+        display: block;
+        box-sizing: border-box;
+        padding: 8px 10px 8px 8px;
+        border: 0;
+        border-radius: 10px;
+        background: transparent;
+        color: #b9c6e8;
+        font: inherit;
+        font-size: 13px;
+        text-align: left;
+        cursor: pointer;
+        transition: background 0.18s ease, color 0.18s ease;
+        overflow: hidden;
+      }
+      .recent-chat-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+      .recent-chat-button:hover {
+        background: rgba(255,255,255,0.05);
+        color: #ffffff;
+      }
+      .recent-chat-button.active {
+        background: rgba(255,255,255,0.08);
+        color: #ffffff;
+      }
+      .recent-chat-title {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .recent-chat-badge {
+        flex: 0 0 auto;
+        border-radius: 999px;
+        padding: 2px 7px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        background: rgba(102, 187, 106, 0.18);
+        color: #cbf6cf;
+      }
+      .recent-chat-badge.public {
+        background: rgba(74, 144, 226, 0.20);
+        color: #b9dbff;
+      }
+      .recent-chat-empty {
+        padding: 8px;
+        color: #7f8db0;
+        font-size: 13px;
+      }
+      .chat-shell {
+        width: calc(100% - 248px);
+        min-height: 100vh;
+        margin-left: 248px;
+        display: flex;
+        flex-direction: column;
+        transition: margin-left 0.2s ease, width 0.2s ease;
+      }
+      body.sidebar-collapsed .sidebar {
+        width: 68px;
+        padding: 14px 8px;
+      }
+      body.sidebar-collapsed .chat-shell {
+        width: calc(100% - 68px);
+        margin-left: 68px;
+      }
+      body.sidebar-collapsed .composer-area {
+        left: 68px;
+      }
+      body.sidebar-collapsed .sidebar-button,
+      body.sidebar-collapsed .sidebar-toggle {
+        justify-content: center;
+        padding-left: 0;
+        padding-right: 0;
+      }
+      body.sidebar-collapsed .sidebar-label,
+      body.sidebar-collapsed .recent-chats {
+        display: none;
+      }
+      .hero {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      .hero.hidden {
+        display: none;
+      }
+      .hero-inner {
+        width: min(1000px, calc(100% - 32px));
+        margin: 0 auto;
+        box-sizing: border-box;
+      }
+      .top-right-chat-action {
+        position: fixed;
+        top: 16px;
+        right: 20px;
+        width: 42px;
+        height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.08);
+        color: #d8e3ff;
+        cursor: pointer;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+        transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+        z-index: 30;
+      }
+      .top-right-chat-action:hover {
+        background: rgba(255,255,255,0.14);
+        color: #ffffff;
+        transform: translateY(-1px);
+      }
+      .top-right-chat-action svg {
+        width: 20px;
+        height: 20px;
+        fill: currentColor;
+      }
+      .hero-title {
+        font-size: 38px;
+        line-height: 1.15;
+        margin: 0 0 12px;
+      }
+      .hero-subtitle {
+        color: #aeb9d6;
+        margin: 0 0 28px;
+        font-size: 16px;
+      }
+      .messages-wrap {
+        flex: 1;
+        display: none;
+        width: min(1000px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 24px 0 150px;
+        box-sizing: border-box;
+      }
+      .messages-wrap.active {
+        display: block;
+      }
+      .messages {
+        display: grid;
+        gap: 18px;
+      }
+      .msg-row {
+        display: flex;
+        width: 100%;
+      }
+      .msg-row.user {
+        justify-content: flex-end;
+      }
+      .msg-row.assistant {
+        justify-content: flex-start;
+      }
+      .msg {
+        padding: 14px 16px;
+        border-radius: 16px;
+        line-height: 1.5;
+        max-width: min(96%, 920px);
+      }
+      .msg.user {
+        background: #16203f;
+      }
+      .msg.assistant {
+        background: transparent;
+        padding: 2px 0;
+        border-radius: 0;
+      }
+      .msg pre {
+        white-space: pre-wrap;
+        margin: 0;
+        font-family: inherit;
+      }
+      .msg-body {
+        line-height: 1.65;
+        word-break: break-word;
+      }
+      .msg-body p {
+        margin: 0 0 12px;
+      }
+      .msg-body p:last-child {
+        margin-bottom: 0;
+      }
+      .msg-body ul,
+      .msg-body ol {
+        margin: 0 0 12px 22px;
+        padding: 0;
+      }
+      .msg-body li + li {
+        margin-top: 4px;
+      }
+      .msg-body code {
+        background: rgba(255,255,255,0.08);
+        border-radius: 6px;
+        padding: 2px 6px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.92em;
+      }
+      .msg-body pre {
+        margin: 0 0 12px;
+        background: rgba(0,0,0,0.22);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 12px;
+        padding: 12px;
+        overflow-x: auto;
+      }
+      .msg-body pre code {
+        background: transparent;
+        padding: 0;
+      }
+      .msg-body strong {
+        font-weight: 700;
+      }
+      .msg-body em {
+        font-style: italic;
+      }
+      .msg-body table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0 0 12px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .msg-body th,
+      .msg-body td {
+        padding: 10px 12px;
+        border: 1px solid rgba(255,255,255,0.10);
+        text-align: left;
+        vertical-align: top;
+      }
+      .msg-body th {
+        background: rgba(255,255,255,0.06);
+        font-weight: 700;
+      }
+      .msg-body tr:nth-child(even) td {
+        background: rgba(255,255,255,0.02);
+      }
+      .composer-area {
+        position: fixed;
+        left: 248px;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        justify-content: center;
+        width: auto;
+        padding: 16px 16px 20px;
+        box-sizing: border-box;
+        background: linear-gradient(to top, rgba(11,16,32,0.98), rgba(11,16,32,0.92), rgba(11,16,32,0));
+        z-index: 20;
+      }
+      .hero-composer {
+        width: min(1000px, 100%);
+        margin: 0 auto;
+        box-sizing: border-box;
+      }
+      .chat-composer {
+        width: min(1000px, calc(100% - 32px));
+        max-width: 100%;
+        min-width: 0;
+        margin: 0 auto;
+        box-sizing: border-box;
+      }
+      .composer-card {
+        max-width: 100%;
+        background: linear-gradient(180deg, rgba(24,31,58,0.96), rgba(18,25,48,0.96));
+        border: 1px solid #2a3866;
+        border-radius: 24px;
+        padding: 10px;
+        box-shadow: 0 18px 40px rgba(0,0,0,0.22);
+        box-sizing: border-box;
+      }
+      .composer-card.hero-composer {
+        width: 100%;
+      }
+      .composer-card.chat-composer {
+        width: min(1000px, calc(100% - 32px));
+        max-width: 100%;
+        min-width: 0;
+        margin: 0 auto;
+      }
+      .chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #1a2448;
+        border: 1px solid #33406f;
+        color: #dfe7ff;
+        border-radius: 999px;
+        padding: 7px 10px 7px 12px;
+        font-size: 13px;
+      }
+      .chip button {
+        background: transparent;
+        border: 0;
+        color: #cfd8f6;
+        font-size: 14px;
+        padding: 0;
+        width: 18px;
+        height: 18px;
+        line-height: 18px;
+        cursor: pointer;
+      }
+      .input-shell {
+        display: flex;
+        align-items: flex-end;
+        gap: 8px;
+        min-width: 0;
+        background: linear-gradient(180deg, #0f1530, #0d1329);
+        border: 1px solid #3a4a7e;
+        border-radius: 20px;
+        padding: 6px 8px;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+      .input-shell:focus-within {
+        border-color: #6ea8fe;
+        box-shadow: 0 0 0 3px rgba(110,168,254,0.12);
+      }
+      textarea {
+        flex: 1;
+        min-width: 0;
+        height: 38px;
+        min-height: 38px;
+        max-height: 220px;
+        resize: none;
+        overflow-y: auto;
+        background: transparent;
+        color: #fff;
+        border: 0;
+        outline: none;
+        padding: 4px 4px;
+        box-sizing: border-box;
+        font: inherit;
+        line-height: 1.45;
+      }
+      textarea::placeholder {
+        color: #8f9bbb;
+      }
+      button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: wait;
+      }
+      input[type="file"] {
+        display: none;
+      }
+      .icon-button {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background: transparent;
+        color: #dfe7ff;
+        font-size: 20px;
+        line-height: 1;
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        transform: translateY(-4px);
+        transition: background 0.2s ease;
+        cursor: pointer;
+      }
+      .icon-button:hover {
+        color: #dfe7ff;
+      }
+      .send-button {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background: linear-gradient(180deg, #7fb3ff, #5d97f7);
+        color: #081120;
+        font-size: 18px;
+        line-height: 1;
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        transform: translateY(-1px);
+        box-shadow: none;
+        transition: background 0.2s ease;
+      }
+      .send-button:hover {
+        background: linear-gradient(180deg, #8ab9ff, #669ff8);
+      }
+      .muted { color: #aeb9d6; }
+      .loading { color: #ffd36e; }
+      .msg.loading-message {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: #ffd36e;
+      }
+      .spinner {
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255, 211, 110, 0.28);
+        border-top-color: #ffd36e;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        flex: 0 0 auto;
+      }
+      .recent-chat-spinner {
+        width: 12px;
+        height: 12px;
+        border-width: 2px;
+      }
+      .loading-text {
+        color: #ffd36e;
+        font-size: 15px;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .composer-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+        padding: 0 2px;
+      }
+      .composer-footer-right {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-left: auto;
+      }
+      .document-info {
+        color: #aeb9d6;
+        font-size: 14px;
+      }
+      .chat-mode-badge {
+        display: none;
+        color: #ffd36e;
+        background: rgba(255, 211, 110, 0.16);
+        border: 1px solid rgba(255, 211, 110, 0.4);
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+        align-self: center;
+      }
+      .rag-active-badge {
+        display: none;
+        color: #cbf6cf;
+        background: rgba(102, 187, 106, 0.18);
+        border: 1px solid rgba(102, 187, 106, 0.45);
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+      }
+      .rag-active-badge.visible {
+        display: inline-block;
+      }
+      .chat-mode-badge.remote {
+        color: #ff7a7a;
+        background: rgba(199, 91, 91, 0.16);
+        border-color: rgba(199, 91, 91, 0.4);
+      }
+      .chat-mode-badge.visible {
+        display: inline-block;
+      }
+      .scroll-to-bottom {
+        position: fixed;
+        right: max(18px, calc(((100vw - 248px) - min(1000px, calc(100vw - 280px))) / 2 - 52px));
+        bottom: 148px;
+        width: 42px;
+        height: 42px;
+        border-radius: 999px;
+        border: 0;
+        background: rgba(28, 40, 79, 0.50);
+        color: #e8ecf3;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        cursor: pointer;
+        backdrop-filter: blur(8px);
+        box-shadow: 0 10px 24px rgba(0,0,0,0.28);
+        z-index: 30;
+      }
+      .scroll-to-bottom.visible {
+        display: inline-flex;
+      }
+      .scroll-to-bottom:hover {
+        background: rgba(44, 63, 122, 0.82);
+      }
+      .mobile-menu-toggle,
+      .mobile-sidebar-backdrop {
+        display: none;
+      }
+      @media (max-width: 720px) {
+        body {
+          overflow-x: hidden;
+        }
+        .hero-inner {
+          width: 100%;
+          padding: 0 10px;
+        }
+        .hero-composer,
+        .messages-wrap,
+        .chat-composer {
+          width: 100%;
+          max-width: 100%;
+          min-width: 0;
+        }
+        .composer-card {
+          width: 100%;
+          box-sizing: border-box;
+        }
+        .mobile-menu-toggle {
+          position: fixed;
+          top: 10px;
+          left: 10px;
+          z-index: 1200;
+          width: 44px;
+          height: 44px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid rgba(145, 161, 200, 0.2);
+          border-radius: 12px;
+          background: rgba(14, 20, 41, 0.92);
+          color: #e8ecf3;
+          backdrop-filter: blur(10px);
+          box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+        }
+        .mobile-menu-toggle svg {
+          width: 22px;
+          height: 22px;
+          fill: currentColor;
+        }
+        .mobile-sidebar-backdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 1090;
+          background: rgba(3, 8, 20, 0.58);
+        }
+        body.mobile-sidebar-open .mobile-sidebar-backdrop {
+          display: block;
+        }
+        body.sidebar-collapsed .chat-shell {
+          width: 100%;
+          margin: 0;
+        }
+        body.sidebar-collapsed .sidebar-button,
+        body.sidebar-collapsed .sidebar-toggle {
+          justify-content: flex-start;
+          padding-left: 8px;
+          padding-right: 10px;
+        }
+        body.sidebar-collapsed .sidebar-label,
+        body.sidebar-collapsed .recent-chats {
+          display: initial;
+        }
+        .app {
+          flex-direction: column;
+        }
+        .sidebar {
+          width: min(86vw, 320px);
+          max-width: calc(100vw - 48px);
+          height: 100vh;
+          position: fixed;
+          top: 0;
+          left: 0;
+          z-index: 1100;
+          padding: 64px 12px 16px 8px;
+          overflow-y: auto;
+          border-right: 1px solid #243158;
+          border-bottom: 0;
+          box-shadow: 0 24px 48px rgba(0, 0, 0, 0.42);
+          transform: translateX(-110%);
+          transition: transform 0.22s ease;
+        }
+        body.mobile-sidebar-open .sidebar {
+          transform: translateX(0);
+        }
+        .sidebar-actions {
+          grid-template-columns: 1fr;
+        }
+        .hero-title {
+          font-size: 30px;
+        }
+        .chat-shell {
+          width: 100%;
+          min-height: auto;
+          margin: 0;
+        }
+        .messages-wrap {
+          width: 100%;
+          padding: 72px 10px 150px;
+        }
+        .hero {
+          padding: 72px 10px 24px;
+          box-sizing: border-box;
+        }
+        .composer-area {
+          position: fixed;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          width: 100%;
+          padding: 12px 10px 14px;
+          box-sizing: border-box;
+        }
+        body.sidebar-collapsed .composer-area {
+          left: 0;
+        }
+        .chat-composer {
+          width: 100%;
+        }
+        .sidebar-toggle {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <button id="mobileMenuToggle" class="mobile-menu-toggle" type="button" title="Abrir menú" aria-label="Abrir menú" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v2H4V6Zm0 5h10v2H4v-2Zm0 5h16v2H4v-2Z"/></svg>
+      </button>
+      <button id="mobileSidebarBackdrop" class="mobile-sidebar-backdrop" type="button" title="Cerrar menú" aria-label="Cerrar menú"></button>
+      <aside class="sidebar">
+        <button id="sidebarToggle" class="sidebar-toggle" type="button" title="Plegar o extender menú lateral">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v2H4V6Zm0 5h10v2H4v-2Zm0 5h16v2H4v-2Z"/></svg>
+        </button>
+        <div class="sidebar-actions">
+          <button id="newChat" class="sidebar-button" title="Abre un chat privado nuevo con un identificador y secreto local.">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9Zm0 0v5h5M9 15l5.5-5.5 2 2L11 17H9Zm6-4 1.5-1.5a1.06 1.06 0 0 1 1.5 0l.5.5a1.06 1.06 0 0 1 0 1.5L17 13"/></svg>
+            <span class="sidebar-label">Nuevo chat</span>
+          </button>
+          <div id="newRagChatButtons"></div>
+          <button id="deepMode" class="sidebar-button" title="Hace una petición separada a Ollama por cada tipo de dato para mejorar la precisión del enmascarado.">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 7v5c0 5.25 3.4 8.6 8 10 4.6-1.4 8-4.75 8-10V7l-8-4Zm0 2.18 6 3v3.6c0 4.18-2.5 6.98-6 8.19-3.5-1.21-6-4.01-6-8.19v-3.6l6-3Zm-1 3.82a1 1 0 1 0 2 0 1 1 0 0 0-2 0Zm-1 3a1 1 0 0 1 1-1h2a1 1 0 1 1 0 2v3a1 1 0 1 1-2 0v-4Z"/></svg>
+            <span class="sidebar-label">Ocultación profunda</span>
+          </button>
+        </div>
+        <div class="recent-chats">
+          <div class="recent-chats-title">Chats recientes</div>
+          <div id="recentChatList" class="recent-chat-list">
+            <div class="recent-chat-empty">Aún no hay chats recientes.</div>
+          </div>
+        </div>
+      </aside>
+
+      <div class="chat-shell">
+        <button id="makeChatPublic" class="top-right-chat-action" title="Hacer este chat público" aria-label="Hacer este chat público">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.8 3.6a1 1 0 0 0-1.08-.18L3.94 10.55a1 1 0 0 0 .1 1.88l5.55 1.85 1.85 5.56a1 1 0 0 0 1.87.09L20.58 4.7a1 1 0 0 0-.18-1.1ZM11.1 13.31l-.83 3.27-1.08-3.24 7.97-7.97-6.06 7.94Z"/></svg>
+        </button>
+        <section id="hero" class="hero">
+          <div class="hero-inner">
+            <h1 class="hero-title">¿Qué quieres preguntar?</h1>
+            <p class="hero-subtitle">Escribe un mensaje para empezar una conversación protegida.</p>
+            <div class="composer-card hero-composer">
+              <div id="chipRowTop" class="chip-row"></div>
+              <div class="input-shell">
+                <label class="icon-button" for="document" title="Adjuntar documento">+</label>
+                <input id="document" type="file" accept=".txt,.md,.json,.csv,.log,.pdf" />
+                <textarea id="message" placeholder="Escribe tu mensaje..."></textarea>
+                <button id="send" class="send-button" title="Enviar">↑</button>
+              </div>
+              <div class="composer-footer">
+                <div id="documentInfo" class="document-info"></div>
+                <div class="composer-footer-right">
+                  <span id="loadingState" class="muted"></span>
+                  <span id="chatRagBadgeTop" class="rag-active-badge">Fuente privada</span>
+                  <span id="chatModeBadgeTop" class="chat-mode-badge">LLM Local</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="messagesWrap" class="messages-wrap">
+          <div id="messages" class="messages"></div>
+        </section>
+
+        <div id="chatComposerArea" class="composer-area" style="display:none;">
+          <div class="composer-card chat-composer">
+            <div id="chipRowBottom" class="chip-row"></div>
+            <div class="input-shell">
+              <label class="icon-button" for="documentBottom" title="Adjuntar documento">+</label>
+              <input id="documentBottom" type="file" accept=".txt,.md,.json,.csv,.log,.pdf" />
+              <textarea id="messageBottom" placeholder="Escribe tu mensaje..."></textarea>
+              <button id="sendBottom" class="send-button" title="Enviar">↑</button>
+            </div>
+            <div class="composer-footer">
+              <div id="documentInfoBottom" class="document-info"></div>
+              <div class="composer-footer-right">
+                <span id="loadingStateBottom" class="muted"></span>
+                <span id="chatRagBadgeBottom" class="rag-active-badge">Fuente privada</span>
+                <span id="chatModeBadgeBottom" class="chat-mode-badge">LLM Local</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button id="scrollToBottom" class="scroll-to-bottom" type="button" title="Ir al final del chat">↓</button>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+    <script>
+      const RECENT_CHATS_STORAGE_KEY = 'daimon_recent_chats';
+      const CHAT_ACCESS_STORAGE_KEY = 'daimon_chat_access';
+      const SIDEBAR_COLLAPSED_STORAGE_KEY = 'daimon_sidebar_collapsed';
+      const MAX_RECENT_CHATS = 20;
+      const pendingChatRequests = new Set();
+      let selectedDocument = null;
+      let deepModeEnabled = false;
+      let documentsEnabled = true;
+      let publicChatEnabled = true;
+      let deepModeVisible = true;
+      let currentChatMode = 'masked-local-remote';
+      let currentChatAccess = 'private';
+      let currentUseRag = false;
+      let currentRagKey = '';
+      let currentRagBadgeLabel = 'Fuente privada';
+      let currentRagMissing = false;
+      let availableRags = [];
+
+      function randomChatCode() {
+        if (window.crypto?.randomUUID) {
+          return window.crypto.randomUUID();
+        }
+        return `chat_${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}_${Math.random().toString(36).slice(2)}`;
+      }
+
+      function generateChatSecret() {
+        const bytes = new Uint8Array(24);
+        window.crypto.getRandomValues(bytes);
+        return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+      }
+
+      function getChatId() {
+        const url = new URL(window.location.href);
+        let chatId = (url.searchParams.get('chat') || '').trim();
+        if (!/^[a-zA-Z0-9_-]{4,120}$/.test(chatId)) {
+          chatId = randomChatCode();
+          url.searchParams.set('chat', chatId);
+          window.history.replaceState({}, '', url.toString());
+        }
+        return chatId;
+      }
+
+      function isValidChatId(value) {
+        return /^[a-zA-Z0-9_-]{4,120}$/.test(String(value || '').trim());
+      }
+
+      function getChatAccessStore() {
+        try {
+          const raw = window.localStorage.getItem(CHAT_ACCESS_STORAGE_KEY);
+          const parsed = JSON.parse(raw || '{}');
+          return parsed && typeof parsed === 'object' ? parsed : {};
+        } catch {
+          return {};
+        }
+      }
+
+      function saveChatAccessStore(store) {
+        window.localStorage.setItem(CHAT_ACCESS_STORAGE_KEY, JSON.stringify(store || {}));
+      }
+
+      function saveChatAccess(chatId, access = {}) {
+        if (!isValidChatId(chatId)) return null;
+        const store = getChatAccessStore();
+        const next = {
+          chatAccess: access.chatAccess === 'public' ? 'public' : 'private',
+          chatSecret: access.chatAccess === 'public' ? '' : String(access.chatSecret || '').trim(),
+          updatedAt: Date.now(),
+        };
+        store[chatId] = next;
+        saveChatAccessStore(store);
+        return next;
+      }
+
+      function getChatAccess(chatId = getChatId()) {
+        if (!isValidChatId(chatId)) return null;
+        const store = getChatAccessStore();
+        const entry = store[chatId];
+        if (!entry || typeof entry !== 'object') return null;
+        return {
+          chatAccess: entry.chatAccess === 'public' ? 'public' : 'private',
+          chatSecret: entry.chatAccess === 'public' ? '' : String(entry.chatSecret || '').trim(),
+        };
+      }
+
+      function ensureChatAccess(chatId = getChatId(), options = {}) {
+        const publicChat = options.publicChat === true;
+        const rotateSecret = options.rotateSecret === true;
+        const existing = getChatAccess(chatId);
+        if (publicChat) {
+          return saveChatAccess(chatId, { chatAccess: 'public', chatSecret: '' });
+        }
+        if (existing && existing.chatAccess === 'private' && existing.chatSecret && !rotateSecret) {
+          return existing;
+        }
+        return saveChatAccess(chatId, { chatAccess: 'private', chatSecret: generateChatSecret() });
+      }
+
+      function buildChatHeaders(chatId = getChatId(), headersInit = {}) {
+        const headers = new Headers(headersInit || {});
+        const access = getChatAccess(chatId) || ensureChatAccess(chatId);
+        headers.set('X-Chat-Id', chatId);
+        headers.set('X-Chat-Access', access?.chatAccess === 'public' ? 'public' : 'private');
+        if (access?.chatAccess === 'private' && access.chatSecret) {
+          headers.set('X-Chat-Secret', access.chatSecret);
+        }
+        return headers;
+      }
+
+      function getRecentChats() {
+        try {
+          const raw = window.localStorage.getItem(RECENT_CHATS_STORAGE_KEY);
+          const parsed = JSON.parse(raw || '[]');
+          if (!Array.isArray(parsed)) return [];
+          return parsed
+            .map(entry => ({
+              chatId: String(entry?.chatId || '').trim(),
+              title: String(entry?.title || '').trim(),
+              updatedAt: Number(entry?.updatedAt || 0),
+              chatAccess: entry?.chatAccess === 'public' ? 'public' : 'private',
+              useRag: Boolean(entry?.useRag),
+              ragKey: String(entry?.ragKey || '').trim(),
+              ragLabel: String(entry?.ragLabel || '').trim(),
+            }))
+            .filter(entry => isValidChatId(entry.chatId))
+            .slice(0, MAX_RECENT_CHATS);
+        } catch {
+          return [];
+        }
+      }
+
+      function saveRecentChats(list) {
+        window.localStorage.setItem(RECENT_CHATS_STORAGE_KEY, JSON.stringify(list.slice(0, MAX_RECENT_CHATS)));
+      }
+
+      function getRecentChatEntry(chatId) {
+        return getRecentChats().find(entry => entry.chatId === chatId) || null;
+      }
+
+      function isSidebarCollapsed() {
+        try {
+          return window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === '1';
+        } catch {
+          return false;
+        }
+      }
+
+      function isMobileViewport() {
+        return window.matchMedia('(max-width: 720px)').matches;
+      }
+
+      function applySidebarCollapsedState(collapsed) {
+        document.body.classList.toggle('sidebar-collapsed', !!collapsed);
+      }
+
+      function setMobileSidebarOpen(open) {
+        const nextValue = !!open;
+        document.body.classList.toggle('mobile-sidebar-open', nextValue);
+        const toggle = document.getElementById('mobileMenuToggle');
+        if (toggle) {
+          toggle.setAttribute('aria-expanded', nextValue ? 'true' : 'false');
+          toggle.title = nextValue ? 'Cerrar menú' : 'Abrir menú';
+          toggle.setAttribute('aria-label', nextValue ? 'Cerrar menú' : 'Abrir menú');
+        }
+      }
+
+      function setSidebarCollapsed(collapsed) {
+        const nextValue = !!collapsed;
+        try {
+          window.localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, nextValue ? '1' : '0');
+        } catch {
+        }
+        applySidebarCollapsedState(nextValue);
+      }
+
+      function toggleSidebarCollapsed() {
+        if (isMobileViewport()) {
+          setMobileSidebarOpen(!document.body.classList.contains('mobile-sidebar-open'));
+          return;
+        }
+        setSidebarCollapsed(!document.body.classList.contains('sidebar-collapsed'));
+      }
+
+      function formatChatTime(timestamp) {
+        const date = new Date(timestamp || Date.now());
+        return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+      }
+
+      function trimChatTitle(text, fallbackTimestamp = Date.now()) {
+        const source = String(text || '')
+          .replace(/\s+/g, ' ')
+          .trim();
+        if (source) {
+          return source.length > 42 ? `${source.slice(0, 42).trimEnd()}…` : source;
+        }
+        return `Chat ${formatChatTime(fallbackTimestamp)}`;
+      }
+
+      function buildChatTitle(history, updatedAt = Date.now()) {
+        const firstUserMessage = Array.isArray(history)
+          ? history.find(entry => entry?.role === 'user' && String(entry?.displayContent || entry?.content || '').trim())
+          : null;
+
+        if (firstUserMessage) {
+          return trimChatTitle(firstUserMessage.displayContent || firstUserMessage.content || '', updatedAt);
+        }
+
+        return `Chat ${formatChatTime(updatedAt)}`;
+      }
+
+      function forgetChat(chatId) {
+        if (!isValidChatId(chatId)) return;
+        const nextList = getRecentChats().filter(entry => entry.chatId !== chatId);
+        saveRecentChats(nextList);
+        renderRecentChats();
+      }
+
+      function upsertRecentChat(chatId, title, updatedAt = Date.now(), { moveToTop = true, preserveTitle = false, chatAccess = 'private', useRag = false, ragKey = '', ragLabel = '' } = {}) {
+        if (!isValidChatId(chatId)) return;
+        const normalizedEntry = {
+          chatId,
+          title: trimChatTitle(title, updatedAt),
+          updatedAt,
+          chatAccess: chatAccess === 'public' ? 'public' : 'private',
+          useRag: !!useRag,
+          ragKey: String(ragKey || '').trim(),
+          ragLabel: String(ragLabel || '').trim(),
+        };
+        const current = getRecentChats();
+        const existingIndex = current.findIndex(entry => entry.chatId === chatId);
+
+        let nextList;
+        if (moveToTop || existingIndex === -1) {
+          nextList = [
+            normalizedEntry,
+            ...current.filter(entry => entry.chatId !== chatId),
+          ];
+        } else {
+          nextList = [...current];
+          nextList[existingIndex] = {
+            ...nextList[existingIndex],
+            title: preserveTitle ? nextList[existingIndex].title : normalizedEntry.title,
+            updatedAt: normalizedEntry.updatedAt,
+            chatAccess: normalizedEntry.chatAccess,
+            useRag: normalizedEntry.useRag,
+            ragKey: normalizedEntry.ragKey,
+            ragLabel: normalizedEntry.ragLabel,
+          };
+        }
+
+        saveRecentChats(nextList.slice(0, MAX_RECENT_CHATS));
+        renderRecentChats();
+      }
+
+      function rememberChat(chatId, history, options = {}) {
+        if (!isValidChatId(chatId) || !Array.isArray(history) || history.length === 0) {
+          if (!isChatPending(chatId)) {
+            forgetChat(chatId);
+          }
+          return;
+        }
+
+        const updatedAt = Date.now();
+        upsertRecentChat(chatId, buildChatTitle(history, updatedAt), updatedAt, {
+          ...options,
+          useRag: options.useRag ?? currentUseRag,
+          ragKey: options.ragKey ?? currentRagKey,
+          ragLabel: options.ragLabel ?? currentRagBadgeLabel,
+        });
+      }
+
+      function renderRecentChats() {
+        const container = document.getElementById('recentChatList');
+        if (!container) return;
+
+        const currentChatId = getChatId();
+        const items = getRecentChats();
+        if (!items.length) {
+          container.innerHTML = '<div class="recent-chat-empty">Aún no hay chats recientes.</div>';
+          return;
+        }
+
+        container.innerHTML = items.map(entry => `
+          <button class="recent-chat-button ${entry.chatId === currentChatId ? 'active' : ''}" type="button" data-chat-id="${escapeHtml(entry.chatId)}">
+            <span class="recent-chat-row">
+              ${isChatPending(entry.chatId) ? '<span class="spinner recent-chat-spinner" aria-hidden="true"></span>' : ''}
+              <span class="recent-chat-title">${escapeHtml(entry.title || entry.chatId)}</span>
+              ${entry.chatAccess === 'public' ? '<span class="recent-chat-badge public">Público</span>' : ''}
+              ${entry.useRag ? `<span class="recent-chat-badge">${escapeHtml(entry.ragLabel || 'Fuente privada')}</span>` : ''}
+            </span>
+          </button>
+        `).join('');
+
+        container.querySelectorAll('[data-chat-id]').forEach(button => {
+          button.addEventListener('click', () => {
+            const chatId = button.getAttribute('data-chat-id') || '';
+            if (!chatId || chatId === getChatId()) return;
+            openChat(chatId);
+          });
+        });
+      }
+
+      function fetchWithChatScope(url, options = {}, chatId = getChatId()) {
+        const headers = buildChatHeaders(chatId, options.headers || {});
+        return fetch(url, { ...options, headers });
+      }
+
+      function setHeroSubtitle(text) {
+        const subtitle = document.querySelector('.hero-subtitle');
+        if (subtitle) {
+          subtitle.textContent = String(text || 'Escribe un mensaje para empezar una conversación protegida.');
+        }
+      }
+
+      function updateMakePublicButton() {
+        const button = document.getElementById('makeChatPublic');
+        if (!button) return;
+        const visible = publicChatEnabled && currentChatAccess === 'private';
+        button.style.display = visible ? '' : 'none';
+      }
+
+      function updateWindowTitle(title = '') {
+        const nextTitle = String(title || '').trim();
+        document.title = nextTitle || 'Nuevo chat';
+      }
+
+      async function openChat(chatId, { pushHistory = true } = {}) {
+        if (!isValidChatId(chatId)) return;
+        if (isMobileViewport()) {
+          setMobileSidebarOpen(false);
+        }
+        const url = new URL(window.location.href);
+        url.searchParams.set('chat', chatId);
+        if (pushHistory) {
+          window.history.pushState({}, '', url.toString());
+        } else {
+          window.history.replaceState({}, '', url.toString());
+        }
+
+        if (!getChatAccess(chatId)) {
+          ensureChatAccess(chatId);
+        }
+
+        clearSelectedDocument();
+        await loadHistory();
+        updateComposerLockState(chatId);
+        requestAnimationFrame(() => {
+          scrollToBottom('auto');
+          updateScrollToBottomButton();
+        });
+      }
+
+      function escapeHtml(text) {
+        return String(text)
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;');
+      }
+
+      function renderMarkdown(text) {
+        const source = String(text || '');
+        const unsafeHtml = marked.parse(source, { breaks: true, gfm: true });
+        return DOMPurify.sanitize(unsafeHtml);
+      }
+
+      function autoGrowTextarea(textarea) {
+        if (!textarea) return;
+        textarea.style.height = '38px';
+        textarea.style.height = `${Math.min(textarea.scrollHeight, 220)}px`;
+      }
+
+      function renderHistory(history) {
+        const container = document.getElementById('messages');
+        if (!history || history.length === 0) {
+          container.innerHTML = '';
+          updateWindowTitle('Nuevo chat');
+          setChatMode(false);
+          return;
+        }
+
+        updateWindowTitle(buildChatTitle(history));
+        setChatMode(true);
+        container.innerHTML = history.map(msg => `
+          <div class="msg-row ${msg.role === 'user' ? 'user' : 'assistant'}">
+            <div class="msg ${msg.role === 'user' ? 'user' : 'assistant'}">
+              <div class="msg-body">${renderMarkdown(msg.displayContent || msg.content)}</div>
+            </div>
+          </div>
+        `).join('');
+
+        if (isChatPending()) {
+          container.innerHTML += `
+            <div class="msg-row assistant" id="assistantLoadingRow">
+              <div class="msg assistant loading-message">
+                <span class="spinner" aria-hidden="true"></span>
+                <span class="loading-text">Procesando...</span>
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      function setChatMode(active) {
+        document.getElementById('hero').classList.toggle('hidden', active);
+        document.getElementById('messagesWrap').classList.toggle('active', active);
+        document.getElementById('chatComposerArea').style.display = active ? 'block' : 'none';
+        updateScrollToBottomButton();
+      }
+
+      function scrollToBottom(behavior = 'smooth') {
+        const safeBehavior = behavior === 'auto' || behavior === 'smooth' ? behavior : 'smooth';
+        window.scrollTo({ top: document.documentElement.scrollHeight, behavior: safeBehavior });
+      }
+
+      function updateScrollToBottomButton() {
+        const button = document.getElementById('scrollToBottom');
+        const messagesWrap = document.getElementById('messagesWrap');
+        const active = messagesWrap.classList.contains('active');
+        const distanceToBottom = document.documentElement.scrollHeight - window.innerHeight - window.scrollY;
+        button.classList.toggle('visible', active && distanceToBottom > 220);
+      }
+
+      function renderChips() {
+        const html = selectedDocument
+          ? `
+            <div class="chip">
+              <span>${escapeHtml(selectedDocument.name)}</span>
+              <button type="button" data-remove-chip>×</button>
+            </div>
+          `
+          : '';
+
+        document.getElementById('chipRowTop').innerHTML = html;
+        document.getElementById('chipRowBottom').innerHTML = html;
+
+        document.querySelectorAll('[data-remove-chip]').forEach(button => {
+          button.addEventListener('click', clearSelectedDocument);
+        });
+      }
+
+      function updateDocumentInfo(text) {
+        document.getElementById('documentInfo').textContent = text || '';
+        document.getElementById('documentInfoBottom').textContent = text || '';
+      }
+
+      function isChatPending(chatId = getChatId()) {
+        return pendingChatRequests.has(chatId);
+      }
+
+      function updateComposerLockState(chatId = getChatId()) {
+        const lockedByPending = isChatPending(chatId);
+        const lockedByMissingRag = currentUseRag && currentRagMissing;
+        const locked = lockedByPending || lockedByMissingRag;
+        const messageTop = document.getElementById('message');
+        const messageBottom = document.getElementById('messageBottom');
+        const sendTop = document.getElementById('send');
+        const sendBottom = document.getElementById('sendBottom');
+        const loadingTop = document.getElementById('loadingState');
+        const loadingBottom = document.getElementById('loadingStateBottom');
+        const attachTop = document.querySelector('label[for="document"]');
+        const attachBottom = document.querySelector('label[for="documentBottom"]');
+        const missingRagMessage = lockedByMissingRag
+          ? `Este chat está vinculado a una fuente privada que ya no existe (${currentRagKey || 'sin clave'}). Puedes leer el historial, pero no enviar mensajes nuevos.`
+          : '';
+
+        messageTop.disabled = locked;
+        messageBottom.disabled = locked;
+        sendTop.disabled = locked;
+        sendBottom.disabled = locked;
+        messageTop.placeholder = lockedByMissingRag ? 'Chat bloqueado por fuente eliminada' : 'Escribe tu mensaje...';
+        messageBottom.placeholder = lockedByMissingRag ? 'Chat bloqueado por fuente eliminada' : 'Escribe tu mensaje...';
+
+        if (attachTop) {
+          attachTop.style.pointerEvents = locked ? 'none' : '';
+          attachTop.style.opacity = locked ? '0.6' : '';
+        }
+        if (attachBottom) {
+          attachBottom.style.pointerEvents = locked ? 'none' : '';
+          attachBottom.style.opacity = locked ? '0.6' : '';
+        }
+
+        loadingTop.className = 'muted';
+        loadingBottom.className = 'muted';
+        loadingTop.textContent = missingRagMessage;
+        loadingBottom.textContent = missingRagMessage;
+      }
+
+      function setChatPending(chatId, pending) {
+        if (!isValidChatId(chatId)) return;
+        if (pending) {
+          pendingChatRequests.add(chatId);
+        } else {
+          pendingChatRequests.delete(chatId);
+        }
+
+        renderRecentChats();
+        if (getChatId() === chatId) {
+          updateComposerLockState(chatId);
+        }
+      }
+
+      function clearSelectedDocument() {
+        selectedDocument = null;
+        document.getElementById('document').value = '';
+        document.getElementById('documentBottom').value = '';
+        renderChips();
+        updateDocumentInfo('');
+      }
+
+      function updateDocumentsUi() {
+        document.querySelectorAll('label[for="document"], label[for="documentBottom"], #document, #documentBottom').forEach(el => {
+          el.style.display = documentsEnabled ? '' : 'none';
+        });
+        if (!documentsEnabled) {
+          clearSelectedDocument();
+        }
+      }
+
+      function updateDeepModeVisibility() {
+        const deepModeButton = document.getElementById('deepMode');
+        if (deepModeButton) {
+          deepModeButton.style.display = deepModeVisible ? '' : 'none';
+        }
+      }
+
+      function updateChatModeBadge() {
+        const isLocal = currentChatMode === 'direct-local';
+        const isRemote = currentChatMode === 'direct-remote';
+        const updateBadge = badge => {
+          if (!badge) return;
+          badge.classList.toggle('visible', isLocal || isRemote);
+          badge.classList.toggle('remote', isRemote);
+          badge.textContent = isRemote ? 'LLM Externo' : 'LLM Local';
+        };
+        updateBadge(document.getElementById('chatModeBadgeTop'));
+        updateBadge(document.getElementById('chatModeBadgeBottom'));
+      }
+
+      function renderRagChatButtons() {
+        const container = document.getElementById('newRagChatButtons');
+        if (!container) return;
+        container.innerHTML = (availableRags || []).filter(rag => rag.active !== false).map(rag => `
+          <button class="sidebar-button rag-button ${currentUseRag && currentRagKey === rag.key ? 'active' : ''}" type="button" data-rag-chat="${escapeHtml(rag.key)}" title="Abre un chat nuevo conectado a ${escapeHtml(rag.label)}.">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v4H4V5Zm0 5h16v4H4v-4Zm0 5h10v4H4v-4Zm12.5 1a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Zm0 1.2a1.3 1.3 0 1 1 0 2.6 1.3 1.3 0 0 1 0-2.6Z"/></svg>
+            <span class="sidebar-label">Nuevo chat ${escapeHtml(rag.label)}</span>
+          </button>
+        `).join('');
+        container.querySelectorAll('[data-rag-chat]').forEach(button => {
+          button.addEventListener('click', () => {
+            const ragKey = button.getAttribute('data-rag-chat') || '';
+            const rag = availableRags.find(item => item.key === ragKey);
+            if (rag) openNewChat({ useRag: true, ragKey: rag.key, ragLabel: rag.label });
+          });
+        });
+      }
+
+      function updateRagButtonState() {
+        renderRagChatButtons();
+        const topBadge = document.getElementById('chatRagBadgeTop');
+        const bottomBadge = document.getElementById('chatRagBadgeBottom');
+        if (topBadge) {
+          topBadge.classList.toggle('visible', !!currentUseRag);
+          topBadge.textContent = currentRagBadgeLabel;
+          topBadge.title = currentRagMissing ? 'Este chat está vinculado a una fuente privada que ya no existe' : '';
+        }
+        if (bottomBadge) {
+          bottomBadge.classList.toggle('visible', !!currentUseRag);
+          bottomBadge.textContent = currentRagBadgeLabel;
+          bottomBadge.title = currentRagMissing ? 'Este chat está vinculado a una fuente privada que ya no existe' : '';
+        }
+        updateComposerLockState();
+      }
+
+      async function loadHistory() {
+        const res = await fetchWithChatScope('/api/history');
+        const data = await res.json();
+
+        if (!res.ok || data?.ok === false) {
+          currentChatAccess = 'private';
+          currentUseRag = false;
+          currentRagKey = '';
+          currentRagMissing = false;
+          updateMakePublicButton();
+          updateChatModeBadge();
+          updateRagButtonState();
+          renderHistory([]);
+          setHeroSubtitle(data?.error || 'Este chat privado solo se puede abrir desde el navegador que lo creó.');
+          forgetChat(getChatId());
+          return;
+        }
+
+        currentChatAccess = data.chatAccess === 'public' ? 'public' : 'private';
+        if (currentChatAccess === 'public') {
+          saveChatAccess(getChatId(), { chatAccess: 'public', chatSecret: '' });
+        } else {
+          ensureChatAccess(getChatId());
+        }
+        updateMakePublicButton();
+        currentChatMode = data.chatMode || currentChatMode || 'masked-local-remote';
+        currentUseRag = !!data.useRag;
+        currentRagKey = data.ragKey || '';
+        currentRagBadgeLabel = data.ragLabel || currentRagBadgeLabel || 'Fuente privada';
+        currentRagMissing = !!data.ragMissing;
+        updateChatModeBadge();
+        updateRagButtonState();
+        setHeroSubtitle(currentChatAccess === 'public'
+          ? 'Este chat es público y puede abrirse desde otros navegadores.'
+          : 'Escribe un mensaje para empezar una conversación protegida.');
+        const history = data.history || [];
+        renderHistory(history);
+        rememberChat(getChatId(), history, { moveToTop: false, chatAccess: currentChatAccess, useRag: currentUseRag, ragKey: currentRagKey, ragLabel: currentRagBadgeLabel });
+      }
+
+      function updateDeepModeUi() {
+        document.getElementById('deepMode').classList.toggle('active', deepModeEnabled);
+      }
+
+      async function saveCurrentChatSettings(settings = {}) {
+        const headers = buildChatHeaders(getChatId(), { 'Content-Type': 'application/json' });
+        const res = await fetch('/api/chat/settings', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(settings),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          throw new Error(data.error || 'No pude guardar la configuración del chat');
+        }
+        currentChatAccess = data.chatAccess === 'public' ? 'public' : 'private';
+        saveChatAccess(getChatId(), {
+          chatAccess: currentChatAccess,
+          chatSecret: currentChatAccess === 'public' ? '' : (getChatAccess(getChatId())?.chatSecret || ensureChatAccess(getChatId()).chatSecret || ''),
+        });
+        updateMakePublicButton();
+        return data.settings || {};
+      }
+
+      async function makeCurrentChatPublic() {
+        if (currentChatAccess === 'public') return;
+        await saveCurrentChatSettings({
+          useRag: currentUseRag,
+          ragKey: currentUseRag ? currentRagKey : '',
+          chatMode: currentChatMode,
+          chatAccess: 'public',
+        });
+        currentChatAccess = 'public';
+        saveChatAccess(getChatId(), { chatAccess: 'public', chatSecret: '' });
+        updateMakePublicButton();
+        setHeroSubtitle('Este chat es público y puede abrirse desde otros navegadores.');
+        const currentEntry = getRecentChatEntry(getChatId());
+        if (currentEntry) {
+          upsertRecentChat(getChatId(), currentEntry.title, Date.now(), {
+            moveToTop: false,
+            preserveTitle: true,
+            chatAccess: 'public',
+            useRag: currentUseRag,
+            ragKey: currentRagKey,
+            ragLabel: currentRagBadgeLabel,
+          });
+        }
+      }
+
+      async function openNewChat(options = {}) {
+        if (isMobileViewport()) {
+          setMobileSidebarOpen(false);
+        }
+        const useRag = !!options.useRag;
+        const publicChat = options.publicChat === true;
+        const chatId = randomChatCode();
+        const nextRagKey = useRag ? String(options.ragKey || '') : '';
+        const nextRagLabel = useRag ? String(options.ragLabel || '') : '';
+        currentChatAccess = publicChat ? 'public' : 'private';
+        ensureChatAccess(chatId, { publicChat, rotateSecret: true });
+        await openChat(chatId);
+        await saveCurrentChatSettings({ useRag, ragKey: nextRagKey, chatMode: currentChatMode, chatAccess: currentChatAccess });
+        currentUseRag = useRag;
+        currentRagKey = nextRagKey;
+        currentRagBadgeLabel = nextRagLabel || currentRagBadgeLabel;
+        currentRagMissing = false;
+        setHeroSubtitle(currentChatAccess === 'public'
+          ? 'Este chat es público y puede abrirse desde otros navegadores.'
+          : 'Escribe un mensaje para empezar una conversación protegida.');
+        updateMakePublicButton();
+        updateRagButtonState();
+      }
+
+      async function sendMessage(fromBottom = false) {
+        const input = document.getElementById(fromBottom ? 'messageBottom' : 'message');
+        const mirrorInput = document.getElementById(fromBottom ? 'message' : 'messageBottom');
+        const message = input.value.trim();
+        if (!message || isChatPending(getChatId()) || (currentUseRag && currentRagMissing)) return;
+
+        const requestChatId = getChatId();
+        const attachedDocument = selectedDocument;
+        const isSameActiveChat = () => getChatId() === requestChatId;
+
+        input.value = '';
+        mirrorInput.value = '';
+        autoGrowTextarea(input);
+        autoGrowTextarea(mirrorInput);
+        setChatPending(requestChatId, true);
+
+        const currentMessages = document.getElementById('messages');
+        const existingRecentChat = getRecentChatEntry(requestChatId);
+        if (!existingRecentChat) {
+          upsertRecentChat(requestChatId, message, Date.now(), { moveToTop: true, chatAccess: currentChatAccess, useRag: currentUseRag, ragKey: currentRagKey, ragLabel: currentRagBadgeLabel });
+        } else {
+          upsertRecentChat(requestChatId, existingRecentChat.title, existingRecentChat.updatedAt, { moveToTop: false, preserveTitle: true, chatAccess: currentChatAccess, useRag: currentUseRag, ragKey: currentRagKey, ragLabel: currentRagBadgeLabel });
+        }
+        setChatMode(true);
+        currentMessages.innerHTML += `
+          <div class="msg-row user">
+            <div class="msg user">
+              <div class="msg-body">${renderMarkdown(message)}${attachedDocument ? `<p>[Documento adjunto: ${escapeHtml(attachedDocument.name)}]</p>` : ''}</div>
+            </div>
+          </div>
+          <div class="msg-row assistant" id="assistantLoadingRow">
+            <div class="msg assistant loading-message">
+              <span class="spinner" aria-hidden="true"></span>
+              <span class="loading-text">Procesando...</span>
+            </div>
+          </div>
+        `;
+
+        updateDocumentInfo(attachedDocument ? `Procesando documento: ${attachedDocument.name}` : '');
+
+        try {
+          const formData = new FormData();
+          formData.append('message', message);
+          if (attachedDocument) {
+            formData.append('document', attachedDocument);
+          }
+          formData.append('singlePass', String(!deepModeEnabled));
+
+          const headers = buildChatHeaders(requestChatId);
+          const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers,
+            body: formData,
+          });
+
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+          let finalData = null;
+          let lastError = null;
+
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+              if (!line.trim()) continue;
+              const event = JSON.parse(line);
+              if (event.type === 'document' && isSameActiveChat()) {
+                updateDocumentInfo(event.attached ? `Documento procesado: ${event.name} · método: ${event.method}` : '');
+              }
+              if (event.type === 'complete') {
+                finalData = event;
+              }
+              if (event.type === 'error') {
+                lastError = event;
+              }
+            }
+          }
+
+          if (isSameActiveChat()) {
+            const assistantLoadingRow = document.getElementById('assistantLoadingRow');
+            if (assistantLoadingRow) {
+              assistantLoadingRow.remove();
+            }
+          }
+
+          if (finalData?.history) {
+            if (typeof finalData.useRag === 'boolean') {
+              currentUseRag = !!finalData.useRag;
+              currentRagKey = finalData.ragKey || currentRagKey;
+              currentRagBadgeLabel = finalData.ragLabel || currentRagBadgeLabel;
+              updateRagButtonState();
+            }
+            if (finalData.chatAccess === 'public' || finalData.chatAccess === 'private') {
+              currentChatAccess = finalData.chatAccess;
+              saveChatAccess(requestChatId, {
+                chatAccess: currentChatAccess,
+                chatSecret: currentChatAccess === 'public' ? '' : (getChatAccess(requestChatId)?.chatSecret || ''),
+              });
+              updateMakePublicButton();
+            }
+            rememberChat(requestChatId, finalData.history, { chatAccess: currentChatAccess, useRag: currentUseRag, ragKey: currentRagKey, ragLabel: currentRagBadgeLabel });
+            if (isSameActiveChat()) {
+              renderHistory(finalData.history);
+              requestAnimationFrame(() => scrollToBottom('auto'));
+            }
+          } else if (lastError && isSameActiveChat()) {
+            if (typeof lastError.ragMissing === 'boolean') {
+              currentRagMissing = !!lastError.ragMissing;
+              currentUseRag = !!lastError.useRag;
+              currentRagKey = lastError.ragKey || currentRagKey;
+              currentRagBadgeLabel = lastError.ragLabel || currentRagBadgeLabel;
+              updateRagButtonState();
+            }
+            currentMessages.innerHTML += `
+              <div class="msg-row assistant">
+                <div class="msg assistant">
+                  <div class="msg-body">${renderMarkdown(lastError.error || 'Error desconocido')}</div>
+                </div>
+              </div>
+            `;
+          }
+        } finally {
+          setChatPending(requestChatId, false);
+          if (isSameActiveChat()) {
+            clearSelectedDocument();
+            if (!document.getElementById('documentInfo').textContent.startsWith('Documento procesado:')) {
+              updateDocumentInfo('');
+            }
+            const assistantLoadingRow = document.getElementById('assistantLoadingRow');
+            if (assistantLoadingRow) {
+              assistantLoadingRow.remove();
+            }
+          }
+        }
+      }
+
+      document.getElementById('send').addEventListener('click', () => sendMessage(false));
+      document.getElementById('sidebarToggle').addEventListener('click', toggleSidebarCollapsed);
+      document.getElementById('mobileMenuToggle').addEventListener('click', toggleSidebarCollapsed);
+      document.getElementById('mobileSidebarBackdrop').addEventListener('click', () => setMobileSidebarOpen(false));
+      document.getElementById('scrollToBottom').addEventListener('click', () => scrollToBottom('smooth'));
+      window.addEventListener('scroll', updateScrollToBottomButton, { passive: true });
+      window.addEventListener('resize', () => {
+        updateScrollToBottomButton();
+        if (!isMobileViewport()) {
+          setMobileSidebarOpen(false);
+        }
+      });
+      document.getElementById('sendBottom').addEventListener('click', () => sendMessage(true));
+      document.getElementById('deepMode').addEventListener('click', () => {
+        deepModeEnabled = !deepModeEnabled;
+        updateDeepModeUi();
+      });
+      document.getElementById('newChat').addEventListener('click', () => openNewChat({ useRag: false, publicChat: false }));
+      document.getElementById('makeChatPublic').addEventListener('click', () => makeCurrentChatPublic());
+      document.getElementById('message').addEventListener('input', event => {
+        autoGrowTextarea(event.target);
+      });
+      document.getElementById('messageBottom').addEventListener('input', event => {
+        autoGrowTextarea(event.target);
+      });
+      document.getElementById('message').addEventListener('keydown', event => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+          event.preventDefault();
+          sendMessage(false);
+        }
+      });
+      document.getElementById('messageBottom').addEventListener('keydown', event => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+          event.preventDefault();
+          sendMessage(true);
+        }
+      });
+      document.getElementById('document').addEventListener('change', event => {
+        selectedDocument = event.target.files?.[0] || null;
+        document.getElementById('documentBottom').value = '';
+        renderChips();
+      });
+      document.getElementById('documentBottom').addEventListener('change', event => {
+        selectedDocument = event.target.files?.[0] || null;
+        document.getElementById('document').value = '';
+        renderChips();
+      });
+
+      window.addEventListener('popstate', () => {
+        openChat(getChatId(), { pushHistory: false });
+      });
+
+      (async () => {
+        applySidebarCollapsedState(isSidebarCollapsed());
+        ensureChatAccess(getChatId());
+        updateWindowTitle('Nuevo chat');
+        setHeroSubtitle('Escribe un mensaje para empezar una conversación protegida.');
+        updateMakePublicButton();
+        renderRecentChats();
+        const res = await fetch('/api/config');
+        const data = await res.json();
+        availableRags = Array.isArray(data.rags) ? data.rags : [];
+        currentRagBadgeLabel = availableRags[0]?.label || 'Fuente privada';
+        documentsEnabled = data.documentsEnabled !== false;
+        publicChatEnabled = data.publicChatEnabled !== false;
+        deepModeVisible = data.deepModeEnabled !== false;
+        updateDocumentsUi();
+        updateDeepModeVisibility();
+        updateMakePublicButton();
+        updateRagButtonState();
+        renderRagChatButtons();
+        await loadHistory();
+        renderChips();
+        updateDocumentInfo('');
+        updateComposerLockState();
+        autoGrowTextarea(document.getElementById('message'));
+        autoGrowTextarea(document.getElementById('messageBottom'));
+        updateDeepModeUi();
+        updateScrollToBottomButton();
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,1707 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Configuración Daimon</title>
+    <link rel="icon" type="image/png" href="/assets/daimon-favicon.png" />
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #0b1020;
+        color: #e8ecf3;
+        font-family: system-ui, sans-serif;
+      }
+      .card {
+        width: min(1200px, calc(100% - 32px));
+        background: linear-gradient(180deg, rgba(24,31,58,0.96), rgba(18,25,48,0.96));
+        border: 1px solid #2a3866;
+        border-radius: 22px;
+        padding: 24px;
+        box-shadow: 0 18px 40px rgba(0,0,0,0.22);
+      }
+      h1 {
+        margin: 0 0 10px;
+        font-size: 28px;
+      }
+      .title-with-logo {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .title-logo {
+        width: 52px;
+        height: 52px;
+        object-fit: contain;
+        flex: 0 0 auto;
+      }
+      h2 {
+        margin: 0 0 12px;
+        font-size: 20px;
+      }
+      p {
+        margin: 0 0 18px;
+        color: #aeb9d6;
+        line-height: 1.5;
+      }
+      label {
+        display: block;
+        font-size: 14px;
+        color: #d6def4;
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        box-sizing: border-box;
+        background: #0f1530;
+        color: #fff;
+        border: 1px solid #3a4a7e;
+        border-radius: 14px;
+        padding: 13px 14px;
+        font: inherit;
+        outline: none;
+      }
+      select {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        padding-right: 44px;
+        cursor: pointer;
+        background-image: linear-gradient(45deg, transparent 50%, #9db7ff 50%), linear-gradient(135deg, #9db7ff 50%, transparent 50%);
+        background-position: calc(100% - 18px) calc(50% - 3px), calc(100% - 12px) calc(50% - 3px);
+        background-size: 6px 6px, 6px 6px;
+        background-repeat: no-repeat;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        border-color: #6ea8fe;
+        box-shadow: 0 0 0 3px rgba(110,168,254,0.12);
+      }
+      button {
+        width: auto;
+        min-width: 120px;
+        margin-top: 14px;
+        border: 0;
+        border-radius: 12px;
+        padding: 10px 14px;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        background: linear-gradient(180deg, #7fb3ff, #5d97f7);
+        color: #081120;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: wait;
+      }
+      .error {
+        margin-top: 14px;
+        color: #ff9a9a;
+        min-height: 20px;
+      }
+      .success {
+        margin-top: 14px;
+        color: #8ee28e;
+        min-height: 20px;
+      }
+      .ok {
+        color: #8ee28e;
+      }
+      .bad {
+        color: #ff9a9a;
+      }
+      .status-detail {
+        margin-top: 8px;
+        min-height: 18px;
+        color: #aeb9d6;
+        font-size: 14px;
+      }
+      .panel {
+        display: none;
+      }
+      .panel.active {
+        display: block;
+      }
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+      .logout-button {
+        width: auto;
+        margin-top: 0;
+        padding: 10px 14px;
+        border-radius: 12px;
+        background: transparent;
+        color: #d6def4;
+        border: 1px solid #33406f;
+      }
+      .danger-button {
+        background: transparent;
+        color: #ffb4b4;
+        border: 1px solid #7b3a4a;
+      }
+      .danger-button:hover {
+        background: rgba(123, 58, 74, 0.18);
+      }
+      .sections-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        align-items: start;
+      }
+      .section {
+        background: #0f1530;
+        border: 1px solid #263056;
+        border-radius: 16px;
+        padding: 14px;
+        margin-top: 18px;
+      }
+      .section.section-outline-only {
+        background: transparent;
+      }
+      .title-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .title-row h2 {
+        margin: 0;
+      }
+      .title-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: #aeb9d6;
+        text-decoration: none;
+      }
+      .title-link svg {
+        width: 14px;
+        height: 14px;
+        fill: currentColor;
+      }
+      .title-link:hover {
+        color: #dbe7ff;
+        text-decoration: underline;
+      }
+      .field-row {
+        display: grid;
+        grid-template-columns: 140px minmax(0, 1fr);
+        gap: 8px;
+        align-items: center;
+        margin-top: 14px;
+      }
+      .field-row:first-of-type {
+        margin-top: 0;
+      }
+      .upload-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-top: 14px;
+      }
+      .upload-input {
+        flex: 1 1 320px;
+      }
+      .file-list {
+        margin: 14px 0 0;
+        padding-left: 18px;
+        color: #d6def4;
+      }
+      .file-list li + li {
+        margin-top: 8px;
+      }
+      .file-meta {
+        color: #aeb9d6;
+        font-size: 13px;
+      }
+      .rag-result-card {
+        margin-top: 14px;
+        padding: 14px;
+        border-radius: 14px;
+        background: #101735;
+        border: 1px solid #2a3866;
+      }
+      .rag-result-card + .rag-result-card {
+        margin-top: 12px;
+      }
+      .rag-result-title {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .rag-result-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .rag-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        background: #20315f;
+        color: #dfe7ff;
+      }
+      .rag-badge.ready { background: #1d4d37; color: #b9f3ce; }
+      .rag-badge.error { background: #5b2430; color: #ffc8d0; }
+      .rag-result-pre {
+        margin: 8px 0 0;
+        white-space: pre-wrap;
+        background: #0b1020;
+        border-radius: 12px;
+        padding: 12px;
+        border: 1px solid #263056;
+        color: #dfe7ff;
+        overflow-x: auto;
+      }
+      .mini-danger-button {
+        min-width: 0;
+        margin-top: 0;
+        padding: 6px 10px;
+        border-radius: 10px;
+        background: transparent;
+        color: #ffb4b4;
+        border: 1px solid #7b3a4a;
+      }
+      .mini-danger-button:hover {
+        background: rgba(123, 58, 74, 0.18);
+      }
+      .rag-summary-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        width: 100%;
+      }
+      .rag-summary-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .collapsible-section {
+        margin-top: 16px;
+        border: 1px solid #263056;
+        border-radius: 14px;
+        background: #101735;
+        overflow: hidden;
+      }
+      .collapsible-section summary {
+        list-style: none;
+        cursor: pointer;
+        padding: 12px 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(255,255,255,0.03);
+      }
+      .collapsible-section summary::-webkit-details-marker {
+        display: none;
+      }
+      .collapsible-caret {
+        color: #9db7ff;
+        font-size: 14px;
+        transition: transform 0.18s ease;
+      }
+      .collapsible-section[open] .collapsible-caret {
+        transform: rotate(90deg);
+      }
+      .collapsible-title-input {
+        flex: 1 1 auto;
+        width: auto;
+        padding: 8px 10px;
+        border-radius: 10px;
+      }
+      .collapsible-content {
+        padding: 14px;
+      }
+      @media (max-width: 1100px) {
+        .sections-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 700px) {
+        .field-row {
+          grid-template-columns: 1fr;
+          gap: 8px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div id="loginPanel" class="panel active">
+        <h1 class="title-with-logo"><img class="title-logo" src="/assets/daimon-logo.png" alt="Logo Daimon" />Configuración Daimon</h1>
+        <p>Introduce la contraseña para entrar en esta zona.</p>
+        <label for="password">Contraseña</label>
+        <input id="password" type="password" placeholder="Escribe la contraseña" autocomplete="current-password" />
+        <button id="loginButton">Entrar</button>
+        <div id="error" class="error"></div>
+      </div>
+
+      <div id="configPanel" class="panel">
+        <div class="topbar">
+          <h1 class="title-with-logo" style="margin:0; font-size: 24px;"><img class="title-logo" src="/assets/daimon-logo.png" alt="Logo Daimon" />Configuración Daimon</h1>
+          <button id="logoutButton" class="logout-button" type="button">Salir</button>
+        </div>
+        <p>La configuración se guarda en <code>data/app-config.json</code></p>
+
+        <div class="sections-grid">
+          <div class="section">
+            <h2>Cambiar contraseña panel config</h2>
+            <div class="field-row">
+              <label for="newPassword">Nueva contraseña</label>
+              <input id="newPassword" type="password" placeholder="Escribe la nueva contraseña" autocomplete="new-password" />
+            </div>
+            <button id="savePasswordButton">Guardar</button>
+            <div id="saveError" class="error"></div>
+            <div id="saveSuccess" class="success"></div>
+          </div>
+
+          <div class="section">
+            <h2>Configuraciones chat</h2>
+            <div class="field-row">
+              <label for="chatMode">Modo del chat</label>
+              <select id="chatMode">
+                <option value="masked-local-remote" selected>(Enmascarar) LLM Local + LLM Externo</option>
+                <option value="direct-local">(Directo) LLM Local</option>
+                <option value="direct-remote">(Directo) LLM Externo</option>
+              </select>
+            </div>
+            <div class="field-row">
+              <label for="documentsEnabled">Subir documentos</label>
+              <input id="documentsEnabled" type="checkbox" style="width: 18px; height: 18px; justify-self: start;" />
+            </div>
+            <div class="field-row">
+              <label for="publicChatEnabled">Mostrar opción de chat público</label>
+              <input id="publicChatEnabled" type="checkbox" style="width: 18px; height: 18px; justify-self: start;" />
+            </div>
+            <div class="field-row">
+              <label for="deepModeEnabled">Mostrar ocultación profunda</label>
+              <input id="deepModeEnabled" type="checkbox" style="width: 18px; height: 18px; justify-self: start;" />
+            </div>
+            <button id="saveDocumentsButton">Guardar</button>
+            <div id="documentsError" class="error"></div>
+            <div id="documentsSuccess" class="success"></div>
+          </div>
+
+          <div class="section">
+            <h2>API OpenAI compatible</h2>
+            <div class="field-row">
+              <label for="openAiCompatEnabled">Activar API</label>
+              <input id="openAiCompatEnabled" type="checkbox" style="width: 18px; height: 18px; justify-self: start;" />
+            </div>
+            <div class="field-row">
+              <label for="openAiCompatApiKey">Clave API</label>
+              <input id="openAiCompatApiKey" type="text" placeholder="Bearer token opcional" autocomplete="off" />
+            </div>
+            <div class="field-row">
+              <label for="openAiCompatDeepModeEnabled">Ocultación profunda</label>
+              <input id="openAiCompatDeepModeEnabled" type="checkbox" style="width: 18px; height: 18px; justify-self: start;" />
+            </div>
+            <div class="field-row">
+              <label for="openAiCompatDebugLogEnabled">Registrar payload completo</label>
+              <input id="openAiCompatDebugLogEnabled" type="checkbox" style="width: 18px; height: 18px; justify-self: start;" />
+            </div>
+            <p class="status-detail">Si está desmarcado, la API usará single-pass con 1 llamada a Ollama.</p>
+            <p class="status-detail">Log temporal: <code>/tmp/daimon-openai-debug.log</code></p>
+            <button id="saveOpenAiCompatButton">Guardar</button>
+            <div id="openAiCompatError" class="error"></div>
+            <div id="openAiCompatSuccess" class="success"></div>
+          </div>
+
+          <div class="section">
+            <h2 id="ollamaTitle">LLM Local: Ollama</h2>
+            <div id="ollamaStatusDetail" class="status-detail">Modelos detectados: cargando...</div>
+            <div class="field-row">
+              <label for="ollamaBaseUrl">URL de Ollama</label>
+              <input id="ollamaBaseUrl" type="text" placeholder="http://192.168.1.154:11434" autocomplete="off" />
+            </div>
+            <div class="field-row">
+              <label for="ollamaModel">Modelo de Ollama</label>
+              <select id="ollamaModel"></select>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
+              <button id="testOllamaButton" type="button" style="margin-top:0;">Probar conexión</button>
+              <button id="saveOllamaButton" style="margin-top:0;">Guardar</button>
+            </div>
+            <div id="ollamaError" class="error"></div>
+            <div id="ollamaSuccess" class="success"></div>
+          </div>
+
+          <div class="section">
+            <h2 id="proxyTitle">LLM Externo</h2>
+            <div id="proxyStatusDetail" class="status-detail">Modelos detectados: cargando...</div>
+            <div class="field-row">
+              <label for="proxyBaseUrl">URL del proxy</label>
+              <input id="proxyBaseUrl" type="text" placeholder="http://127.0.0.1:10531/v1" autocomplete="off" />
+            </div>
+            <div class="field-row">
+              <label for="proxyModel">Modelo externo</label>
+              <select id="proxyModel"></select>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
+              <button id="testProxyButton" type="button" style="margin-top:0;">Probar conexión</button>
+              <button id="saveProxyButton" style="margin-top:0;">Guardar</button>
+            </div>
+            <div id="proxyError" class="error"></div>
+            <div id="proxySuccess" class="success"></div>
+          </div>
+
+          <div class="section">
+            <h2>RAG</h2>
+            <h2 id="ragEmbedTitle">Embeddings RAG: Ollama</h2>
+            <div id="ragEmbedStatusDetail" class="status-detail">Modelos detectados: cargando...</div>
+            <div class="field-row">
+              <label for="ragEmbedBaseUrl">URL de Ollama</label>
+              <input id="ragEmbedBaseUrl" type="text" placeholder="http://192.168.1.154:11434" autocomplete="off" />
+            </div>
+            <div class="field-row">
+              <label for="ragEmbedModel">Modelo de embeddings</label>
+              <select id="ragEmbedModel"></select>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
+              <button id="testRagEmbedButton" type="button" style="margin-top:0;">Probar conexión</button>
+              <button id="saveRagEmbedButton" style="margin-top:0;">Guardar</button>
+              <button id="revectorizeAllRagButton" type="button" style="margin-top:0;">Revectorizar todo</button>
+            </div>
+            <div id="ragEmbedError" class="error"></div>
+            <div id="ragEmbedSuccess" class="success"></div>
+            <div class="field-row" style="grid-template-columns: minmax(0, 1fr) auto; align-items:end; margin-top:18px;">
+              <div>
+                <label for="newRagLabel">Nombre del nuevo RAG</label>
+                <input id="newRagLabel" type="text" placeholder="Ej. Facturas, Manual técnico, Cliente X..." />
+              </div>
+              <button id="createRagButton" type="button" style="margin-top:0;">Crear RAG</button>
+            </div>
+            <div id="ragError" class="error"></div>
+            <div id="ragSuccess" class="success"></div>
+            <div id="ragGroupsContainer" style="margin-top:14px;"></div>
+          </div>
+
+          <div class="section section-outline-only" style="grid-column: 1 / -1;">
+            <h2>(Enmascarar) LLM Local + LLM Externo</h2>
+            <p>Estas opciones solo afectan al modo enmascarado con LLM Local + LLM Externo.</p>
+            <div class="sections-grid">
+              <div class="section" style="grid-column: 1 / -1; margin:0;">
+                <h2>Regex configurables</h2>
+                <p>Aquí puedes editar las reglas regex simples en formato JSON. Las reglas especiales siguen quedándose en código.</p>
+                <p class="status-detail">flags: g = buscar todas las coincidencias · i = ignorar mayúsculas/minúsculas · m = modo multilínea</p>
+                <div class="field-row" style="grid-template-columns: 1fr;">
+                  <label for="regexRules">Reglas regex</label>
+                  <textarea id="regexRules" rows="18" placeholder="Escribe aquí el JSON de reglas regex..."></textarea>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
+                  <button id="validateRegexRulesButton" type="button" style="margin-top:0;">Comprobar sintaxis</button>
+                  <button id="saveRegexRulesButton" style="margin-top:0;">Guardar</button>
+                </div>
+                <div id="regexRulesError" class="error"></div>
+                <div id="regexRulesSuccess" class="success"></div>
+              </div>
+
+              <div class="section" style="margin:0;">
+                <h2>Prompt Ollama de un solo paso</h2>
+                <p>Puedes editar aquí el prompt que se usa en el modo de una sola llamada a Ollama.</p>
+                <div class="field-row" style="grid-template-columns: 1fr;">
+                  <label for="singlePassPrompt">Prompt</label>
+                  <textarea id="singlePassPrompt" rows="16" placeholder="Escribe el prompt de un solo paso..."></textarea>
+                </div>
+                <button id="saveSinglePassPromptButton">Guardar</button>
+                <div id="singlePassPromptError" class="error"></div>
+                <div id="singlePassPromptSuccess" class="success"></div>
+              </div>
+
+              <div class="section" style="margin:0;">
+                <h2>Prompts Ollama multi-pass</h2>
+                <p>Puedes editar aquí los prompts usados en el modo detallado por tipo de dato.</p>
+                <div class="field-row" style="grid-template-columns: 1fr;">
+                  <label for="multiPassPersonaPrompt">Prompt persona</label>
+                  <textarea id="multiPassPersonaPrompt" rows="10" placeholder="Escribe el prompt de persona..."></textarea>
+                </div>
+                <div class="field-row" style="grid-template-columns: 1fr;">
+                  <label for="multiPassDireccionPrompt">Prompt dirección</label>
+                  <textarea id="multiPassDireccionPrompt" rows="10" placeholder="Escribe el prompt de dirección..."></textarea>
+                </div>
+                <div class="field-row" style="grid-template-columns: 1fr;">
+                  <label for="multiPassReferenciaPrompt">Prompt referencia</label>
+                  <textarea id="multiPassReferenciaPrompt" rows="14" placeholder="Escribe el prompt de referencia..."></textarea>
+                </div>
+                <button id="saveMultiPassPromptsButton">Guardar</button>
+                <div id="multiPassPromptsError" class="error"></div>
+                <div id="multiPassPromptsSuccess" class="success"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const loginPanel = document.getElementById('loginPanel');
+      const configPanel = document.getElementById('configPanel');
+      const passwordInput = document.getElementById('password');
+      const loginButton = document.getElementById('loginButton');
+      const logoutButton = document.getElementById('logoutButton');
+      const errorBox = document.getElementById('error');
+      const newPasswordInput = document.getElementById('newPassword');
+      const savePasswordButton = document.getElementById('savePasswordButton');
+      const saveError = document.getElementById('saveError');
+      const saveSuccess = document.getElementById('saveSuccess');
+      const documentsEnabledInput = document.getElementById('documentsEnabled');
+      const publicChatEnabledInput = document.getElementById('publicChatEnabled');
+      const deepModeEnabledInput = document.getElementById('deepModeEnabled');
+      const chatModeInput = document.getElementById('chatMode');
+      const saveDocumentsButton = document.getElementById('saveDocumentsButton');
+      const documentsError = document.getElementById('documentsError');
+      const documentsSuccess = document.getElementById('documentsSuccess');
+      const openAiCompatEnabledInput = document.getElementById('openAiCompatEnabled');
+      const openAiCompatApiKeyInput = document.getElementById('openAiCompatApiKey');
+      const openAiCompatDebugLogEnabledInput = document.getElementById('openAiCompatDebugLogEnabled');
+      const openAiCompatDeepModeEnabledInput = document.getElementById('openAiCompatDeepModeEnabled');
+      const saveOpenAiCompatButton = document.getElementById('saveOpenAiCompatButton');
+      const openAiCompatError = document.getElementById('openAiCompatError');
+      const openAiCompatSuccess = document.getElementById('openAiCompatSuccess');
+      const ollamaBaseUrlInput = document.getElementById('ollamaBaseUrl');
+      const ollamaModelInput = document.getElementById('ollamaModel');
+      const testOllamaButton = document.getElementById('testOllamaButton');
+      const saveOllamaButton = document.getElementById('saveOllamaButton');
+      const ollamaError = document.getElementById('ollamaError');
+      const ollamaSuccess = document.getElementById('ollamaSuccess');
+      const ollamaTitle = document.getElementById('ollamaTitle');
+      const ollamaStatusDetail = document.getElementById('ollamaStatusDetail');
+      const proxyBaseUrlInput = document.getElementById('proxyBaseUrl');
+      const proxyModelInput = document.getElementById('proxyModel');
+      const testProxyButton = document.getElementById('testProxyButton');
+      const saveProxyButton = document.getElementById('saveProxyButton');
+      const proxyError = document.getElementById('proxyError');
+      const proxySuccess = document.getElementById('proxySuccess');
+      const proxyTitle = document.getElementById('proxyTitle');
+      const proxyStatusDetail = document.getElementById('proxyStatusDetail');
+      const newRagLabelInput = document.getElementById('newRagLabel');
+      const createRagButton = document.getElementById('createRagButton');
+      const ragGroupsContainer = document.getElementById('ragGroupsContainer');
+      const ragEmbedBaseUrlInput = document.getElementById('ragEmbedBaseUrl');
+      const ragEmbedModelInput = document.getElementById('ragEmbedModel');
+      const testRagEmbedButton = document.getElementById('testRagEmbedButton');
+      const saveRagEmbedButton = document.getElementById('saveRagEmbedButton');
+      const revectorizeAllRagButton = document.getElementById('revectorizeAllRagButton');
+      const ragEmbedError = document.getElementById('ragEmbedError');
+      const ragEmbedSuccess = document.getElementById('ragEmbedSuccess');
+      const ragEmbedTitle = document.getElementById('ragEmbedTitle');
+      const ragEmbedStatusDetail = document.getElementById('ragEmbedStatusDetail');
+      const singlePassPromptInput = document.getElementById('singlePassPrompt');
+      const saveSinglePassPromptButton = document.getElementById('saveSinglePassPromptButton');
+      const singlePassPromptError = document.getElementById('singlePassPromptError');
+      const singlePassPromptSuccess = document.getElementById('singlePassPromptSuccess');
+      const multiPassPersonaPromptInput = document.getElementById('multiPassPersonaPrompt');
+      const multiPassDireccionPromptInput = document.getElementById('multiPassDireccionPrompt');
+      const multiPassReferenciaPromptInput = document.getElementById('multiPassReferenciaPrompt');
+      const saveMultiPassPromptsButton = document.getElementById('saveMultiPassPromptsButton');
+      const multiPassPromptsError = document.getElementById('multiPassPromptsError');
+      const multiPassPromptsSuccess = document.getElementById('multiPassPromptsSuccess');
+      const regexRulesInput = document.getElementById('regexRules');
+      const validateRegexRulesButton = document.getElementById('validateRegexRulesButton');
+      const saveRegexRulesButton = document.getElementById('saveRegexRulesButton');
+      const regexRulesError = document.getElementById('regexRulesError');
+      const regexRulesSuccess = document.getElementById('regexRulesSuccess');
+      const ragError = document.getElementById('ragError');
+      const ragSuccess = document.getElementById('ragSuccess');
+
+      function escapeHtml(text) {
+        return String(text)
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;');
+      }
+
+      function setSelectOptions(selectEl, models, selectedValue, fallbackLabel = 'Sin modelos detectados') {
+        const uniqueModels = [...new Set((models || []).filter(Boolean))];
+        const values = selectedValue && !uniqueModels.includes(selectedValue)
+          ? [selectedValue, ...uniqueModels]
+          : uniqueModels;
+
+        if (!values.length) {
+          const fallbackValue = selectedValue || '';
+          selectEl.innerHTML = `<option value="${escapeHtml(fallbackValue)}">${escapeHtml(fallbackValue || fallbackLabel)}</option>`;
+          selectEl.value = fallbackValue;
+          return;
+        }
+
+        selectEl.innerHTML = values.map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join('');
+        selectEl.value = values.includes(selectedValue) ? selectedValue : values[0];
+      }
+
+      let currentRags = [];
+
+      function renderRagDocuments(ragKey, documents) {
+        const list = Array.isArray(documents) ? documents : [];
+        if (!list.length) {
+          return '<div class="status-detail">Todavía no hay resultados de vectorización.</div>';
+        }
+
+        return list.map(doc => {
+          const badgeClass = doc.status === 'ready' ? 'ready' : (doc.status === 'error' ? 'error' : '');
+
+          return `
+            <div class="rag-result-card">
+              <div class="rag-result-title">
+                <strong>${escapeHtml(doc.originalName || doc.filename || 'documento')}</strong>
+                <div class="rag-result-actions">
+                  <span class="rag-badge ${badgeClass}">${escapeHtml(doc.status || 'desconocido')}</span>
+                  <button type="button" class="mini-danger-button" data-rag-delete="${escapeHtml(ragKey)}" data-rag-filename="${escapeHtml(doc.filename || '')}">Eliminar</button>
+                </div>
+              </div>
+              <div class="file-meta">chunks: ${escapeHtml(String(doc.chunkCount || 0))} · tamaño: ${escapeHtml(String(doc.sizeBytes || 0))} bytes · chars: ${escapeHtml(String(doc.charCount || 0))}</div>
+              <div class="file-meta">archivo: ${escapeHtml(doc.filename || 'documento')} · última actualización: ${escapeHtml(doc.updatedAt || 'desconocida')}</div>
+              ${doc.errorMessage ? `<div class="error">${escapeHtml(doc.errorMessage)}</div>` : ''}
+            </div>
+          `;
+        }).join('');
+      }
+
+      function renderRagGroups(rags) {
+        const list = Array.isArray(rags) ? rags : [];
+        currentRags = list;
+        if (!list.length) {
+          ragGroupsContainer.innerHTML = '<div class="status-detail">Todavía no hay RAG creados.</div>';
+          return;
+        }
+
+        ragGroupsContainer.innerHTML = list.map(rag => `
+          <details class="collapsible-section" data-rag-key="${escapeHtml(rag.key)}" style="margin-top:12px;">
+            <summary>
+              <span class="collapsible-caret">▶</span>
+              <div class="rag-summary-row">
+                <span class="collapsible-title-text">${escapeHtml(rag.label)}</span>
+                <div class="rag-summary-actions">
+                  <button type="button" class="mini-danger-button" data-rag-remove="${escapeHtml(rag.key)}" data-rag-label="${escapeHtml(rag.label)}">Eliminar RAG</button>
+                </div>
+              </div>
+            </summary>
+            <div class="collapsible-content">
+              <div class="field-row">
+                <label for="rag-active-${escapeHtml(rag.key)}">Activo</label>
+                <input id="rag-active-${escapeHtml(rag.key)}" data-rag-active-toggle="${escapeHtml(rag.key)}" type="checkbox" style="width: 18px; height: 18px; justify-self: start;" ${rag.active !== false ? 'checked' : ''} />
+              </div>
+              <div class="field-row">
+                <label for="rag-only-${escapeHtml(rag.key)}">Responder solo con texto del RAG</label>
+                <input id="rag-only-${escapeHtml(rag.key)}" data-rag-only-toggle="${escapeHtml(rag.key)}" type="checkbox" style="width: 18px; height: 18px; justify-self: start;" ${rag.ragOnlyMode ? 'checked' : ''} />
+              </div>
+              <div class="field-row">
+                <label for="rag-fragments-${escapeHtml(rag.key)}">Fragmentos enviados al LLM</label>
+                <input id="rag-fragments-${escapeHtml(rag.key)}" data-rag-fragments-input="${escapeHtml(rag.key)}" type="number" min="1" max="8" step="1" value="${escapeHtml(String(rag.maxFragments || 4))}" />
+              </div>
+              <div class="upload-row">
+                <input class="upload-input" type="file" accept=".txt,text/plain" data-rag-file="${escapeHtml(rag.key)}" />
+                <button type="button" style="margin-top:0;" data-rag-upload="${escapeHtml(rag.key)}">Subir txt</button>
+              </div>
+              <div style="margin-top:14px;">${renderRagDocuments(rag.key, rag.documents || [])}</div>
+            </div>
+          </details>
+        `).join('');
+
+        async function saveRagToggles(ragKey, patch) {
+          try {
+            ragError.textContent = '';
+            ragSuccess.textContent = '';
+            const res = await fetch(`/api/config-data/rags/${encodeURIComponent(ragKey)}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(patch),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.ok) {
+              throw new Error(data.error || 'No pude guardar la configuración del RAG');
+            }
+            ragSuccess.textContent = 'Configuración del RAG guardada';
+            await loadConfigData();
+          } catch (error) {
+            ragError.textContent = error.message || 'No pude guardar la configuración del RAG';
+            await loadConfigData();
+          }
+        }
+
+        ragGroupsContainer.querySelectorAll('[data-rag-active-toggle]').forEach(input => {
+          input.addEventListener('change', event => {
+            const ragKey = event.target.getAttribute('data-rag-active-toggle');
+            saveRagToggles(ragKey, { active: event.target.checked });
+          });
+        });
+
+        ragGroupsContainer.querySelectorAll('[data-rag-only-toggle]').forEach(input => {
+          input.addEventListener('change', event => {
+            const ragKey = event.target.getAttribute('data-rag-only-toggle');
+            saveRagToggles(ragKey, { ragOnlyMode: event.target.checked });
+          });
+        });
+
+        ragGroupsContainer.querySelectorAll('[data-rag-fragments-input]').forEach(input => {
+          const submit = async () => {
+            const ragKey = input.getAttribute('data-rag-fragments-input');
+            const value = Math.max(1, Math.min(8, Math.round(Number(input.value || 4)) || 4));
+            input.value = String(value);
+            await saveRagToggles(ragKey, { maxFragments: value });
+          };
+
+          input.addEventListener('change', submit);
+          input.addEventListener('blur', submit);
+        });
+
+        ragGroupsContainer.querySelectorAll('[data-rag-upload]').forEach(button => {
+          button.addEventListener('click', () => uploadRagFile(button.getAttribute('data-rag-upload') || ''));
+        });
+
+        ragGroupsContainer.querySelectorAll('[data-rag-delete]').forEach(button => {
+          button.addEventListener('click', () => deleteRagFile(
+            button.getAttribute('data-rag-delete') || '',
+            button.getAttribute('data-rag-filename') || '',
+            button,
+          ));
+        });
+
+        ragGroupsContainer.querySelectorAll('[data-rag-remove]').forEach(button => {
+          button.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopPropagation();
+            deleteRagGroup(
+              button.getAttribute('data-rag-remove') || '',
+              button.getAttribute('data-rag-label') || '',
+              button,
+            );
+          });
+        });
+      }
+
+      async function loadConfigData() {
+        const res = await fetch('/api/config-data');
+        const data = await res.json();
+        if (res.status === 401) {
+          setAuthenticated(false);
+          return;
+        }
+        if (!res.ok || !data.ok) return;
+        ollamaBaseUrlInput.value = data.config?.ollamaBaseUrl || '';
+        proxyBaseUrlInput.value = data.config?.proxyBaseUrl || '';
+        ragEmbedBaseUrlInput.value = data.config?.ragEmbedBaseUrl || '';
+        documentsEnabledInput.checked = !!data.config?.documentsEnabled;
+        publicChatEnabledInput.checked = data.config?.publicChatEnabled !== false;
+        deepModeEnabledInput.checked = data.config?.deepModeEnabled !== false;
+        openAiCompatEnabledInput.checked = data.config?.openAiCompatEnabled === true;
+        openAiCompatApiKeyInput.value = data.config?.openAiCompatApiKey || '';
+        openAiCompatDebugLogEnabledInput.checked = data.config?.openAiCompatDebugLogEnabled === true;
+        openAiCompatDeepModeEnabledInput.checked = data.config?.openAiCompatDeepModeEnabled !== false;
+        chatModeInput.value = data.config?.chatMode || 'masked-local-remote';
+
+        ollamaModelInput.dataset.selectedValue = data.config?.ollamaModel || '';
+        proxyModelInput.dataset.selectedValue = data.config?.proxyModel || '';
+        ragEmbedModelInput.dataset.selectedValue = data.config?.ragEmbedModel || '';
+
+        setSelectOptions(ollamaModelInput, [], data.config?.ollamaModel || '', 'Escribe o guarda un modelo');
+        setSelectOptions(proxyModelInput, [], data.config?.proxyModel || '', 'Sin modelos detectados');
+        setSelectOptions(ragEmbedModelInput, [], data.config?.ragEmbedModel || '', 'Escribe o guarda un modelo');
+        singlePassPromptInput.value = data.config?.singlePassPrompt || '';
+        multiPassPersonaPromptInput.value = data.config?.multiPassPersonaPrompt || '';
+        multiPassDireccionPromptInput.value = data.config?.multiPassDireccionPrompt || '';
+        multiPassReferenciaPromptInput.value = data.config?.multiPassReferenciaPrompt || '';
+        regexRulesInput.value = JSON.stringify(data.config?.regexRules || [], null, 2);
+        renderRagGroups(data.config?.rags || []);
+
+      }
+
+      async function loadOllamaHealth() {
+        ollamaStatusDetail.className = 'status-detail';
+        ollamaStatusDetail.textContent = 'Modelos detectados: cargando...';
+        try {
+          const res = await fetch('/api/ollama-health');
+          const data = await res.json();
+          if (data.ok) {
+            ollamaTitle.className = 'ok';
+            ollamaStatusDetail.className = 'status-detail';
+            const models = Array.isArray(data.data?.models) ? data.data.models.map(x => x.name) : [];
+            setSelectOptions(ollamaModelInput, models, ollamaModelInput.dataset.selectedValue || ollamaModelInput.value);
+            ollamaStatusDetail.textContent = models.length
+              ? `Modelos detectados: ${models.join(', ')}`
+              : 'Conectado correctamente';
+          } else {
+            ollamaTitle.className = 'bad';
+            ollamaStatusDetail.className = 'status-detail bad';
+            ollamaStatusDetail.textContent = data.error || 'Error desconocido';
+            setSelectOptions(ollamaModelInput, [], ollamaModelInput.dataset.selectedValue || ollamaModelInput.value, 'Escribe o guarda un modelo');
+          }
+        } catch (error) {
+          ollamaTitle.className = 'bad';
+          ollamaStatusDetail.className = 'status-detail bad';
+          ollamaStatusDetail.textContent = error.message || 'Error desconocido';
+          setSelectOptions(ollamaModelInput, [], ollamaModelInput.dataset.selectedValue || ollamaModelInput.value, 'Escribe o guarda un modelo');
+        }
+      }
+
+
+      async function loadProxyHealth() {
+        proxyStatusDetail.className = 'status-detail';
+        proxyStatusDetail.textContent = 'Modelos detectados: cargando...';
+        try {
+          const res = await fetch('/api/proxy-health');
+          const data = await res.json();
+          if (data.ok) {
+            proxyTitle.className = 'ok';
+            proxyStatusDetail.className = 'status-detail';
+            const models = Array.isArray(data.data?.data) ? data.data.data.map(x => x.id) : [];
+            setSelectOptions(proxyModelInput, models, proxyModelInput.dataset.selectedValue || proxyModelInput.value);
+            proxyStatusDetail.textContent = models.length
+              ? `Modelos detectados: ${models.join(', ')}`
+              : 'Conectado correctamente';
+          } else {
+            proxyTitle.className = 'bad';
+            proxyStatusDetail.className = 'status-detail bad';
+            proxyStatusDetail.textContent = 'Modelos detectados: no disponible';
+          }
+        } catch (error) {
+          proxyTitle.className = 'bad';
+          proxyStatusDetail.className = 'status-detail bad';
+          proxyStatusDetail.textContent = 'Modelos detectados: no disponible';
+        }
+      }
+
+      async function loadRagEmbedHealth() {
+        ragEmbedStatusDetail.className = 'status-detail';
+        ragEmbedStatusDetail.textContent = 'Modelos detectados: cargando...';
+        try {
+          const res = await fetch('/api/rag-embed-health');
+          const data = await res.json();
+          if (data.ok) {
+            ragEmbedTitle.className = 'ok';
+            ragEmbedStatusDetail.className = 'status-detail';
+            const models = Array.isArray(data.data?.models) ? data.data.models.map(x => x.name) : [];
+            setSelectOptions(ragEmbedModelInput, models, ragEmbedModelInput.dataset.selectedValue || ragEmbedModelInput.value);
+            ragEmbedStatusDetail.textContent = models.length
+              ? `Modelos detectados: ${models.join(', ')}`
+              : 'Conectado correctamente';
+          } else {
+            ragEmbedTitle.className = 'bad';
+            ragEmbedStatusDetail.className = 'status-detail bad';
+            ragEmbedStatusDetail.textContent = data.error || 'Error desconocido';
+            setSelectOptions(ragEmbedModelInput, [], ragEmbedModelInput.dataset.selectedValue || ragEmbedModelInput.value, 'Escribe o guarda un modelo');
+          }
+        } catch (error) {
+          ragEmbedTitle.className = 'bad';
+          ragEmbedStatusDetail.className = 'status-detail bad';
+          ragEmbedStatusDetail.textContent = error.message || 'Error desconocido';
+          setSelectOptions(ragEmbedModelInput, [], ragEmbedModelInput.dataset.selectedValue || ragEmbedModelInput.value, 'Escribe o guarda un modelo');
+        }
+      }
+
+      function setAuthenticated(authenticated) {
+        loginPanel.classList.toggle('active', !authenticated);
+        configPanel.classList.toggle('active', authenticated);
+        if (!authenticated) {
+          passwordInput.value = '';
+          errorBox.textContent = '';
+          passwordInput.focus();
+        }
+      }
+
+      async function checkSession() {
+        try {
+          const res = await fetch('/api/config-auth/status');
+          const data = await res.json();
+
+          if (!res.ok || !data.ok) {
+            setAuthenticated(false);
+            return;
+          }
+
+          setAuthenticated(true);
+          await loadConfigData();
+          await loadOllamaHealth();
+          await loadProxyHealth();
+          await loadRagEmbedHealth();
+        } catch (_error) {
+          setAuthenticated(false);
+        }
+      }
+
+      async function login() {
+        const password = passwordInput.value;
+        if (!password) return;
+
+        loginButton.disabled = true;
+        errorBox.textContent = '';
+
+        try {
+          const res = await fetch('/api/config-auth/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password }),
+          });
+
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            errorBox.textContent = data.error || 'Contraseña incorrecta';
+            setAuthenticated(false);
+            return;
+          }
+
+          setAuthenticated(true);
+          await loadConfigData();
+          await loadOllamaHealth();
+          await loadProxyHealth();
+          await loadRagEmbedHealth();
+        } catch (error) {
+          errorBox.textContent = error.message || 'No pude validar la contraseña';
+        } finally {
+          loginButton.disabled = false;
+        }
+      }
+
+      async function savePassword() {
+        const password = newPasswordInput.value.trim();
+        if (!password) return;
+
+        savePasswordButton.disabled = true;
+        saveError.textContent = '';
+        saveSuccess.textContent = '';
+
+        try {
+          const res = await fetch('/api/config-data/password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password }),
+          });
+
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            saveError.textContent = data.error || 'No pude guardar la contraseña';
+            return;
+          }
+
+          newPasswordInput.value = '';
+          saveSuccess.textContent = 'Contraseña guardada correctamente. Vuelve a entrar con la nueva contraseña.';
+          await logout();
+          setAuthenticated(false);
+        } catch (error) {
+          saveError.textContent = error.message || 'No pude guardar la contraseña';
+        } finally {
+          savePasswordButton.disabled = false;
+        }
+      }
+
+      async function saveDocuments() {
+        saveDocumentsButton.disabled = true;
+        documentsError.textContent = '';
+        documentsSuccess.textContent = '';
+
+        try {
+          const res = await fetch('/api/config-data/documents', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              documentsEnabled: documentsEnabledInput.checked,
+              publicChatEnabled: publicChatEnabledInput.checked,
+              deepModeEnabled: deepModeEnabledInput.checked,
+              chatMode: chatModeInput.value,
+            }),
+          });
+
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            documentsError.textContent = data.error || 'No pude guardar la configuración de documentos';
+            return;
+          }
+
+          documentsSuccess.textContent = 'Configuración de documentos guardada correctamente';
+          await loadConfigData();
+        } catch (error) {
+          documentsError.textContent = error.message || 'No pude guardar la configuración de documentos';
+        } finally {
+          saveDocumentsButton.disabled = false;
+        }
+      }
+
+      async function saveOpenAiCompat() {
+        saveOpenAiCompatButton.disabled = true;
+        openAiCompatError.textContent = '';
+        openAiCompatSuccess.textContent = '';
+
+        try {
+          const res = await fetch('/api/config-data/openai-compat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              openAiCompatEnabled: openAiCompatEnabledInput.checked,
+              openAiCompatApiKey: openAiCompatApiKeyInput.value.trim(),
+              openAiCompatDebugLogEnabled: openAiCompatDebugLogEnabledInput.checked,
+              openAiCompatDeepModeEnabled: openAiCompatDeepModeEnabledInput.checked,
+            }),
+          });
+
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            openAiCompatError.textContent = data.error || 'No pude guardar la configuración de la API';
+            return;
+          }
+
+          openAiCompatSuccess.textContent = 'Configuración de la API guardada correctamente';
+          await loadConfigData();
+        } catch (error) {
+          openAiCompatError.textContent = error.message || 'No pude guardar la configuración de la API';
+        } finally {
+          saveOpenAiCompatButton.disabled = false;
+        }
+      }
+
+      async function testOllamaConnection() {
+        const ollamaBaseUrl = ollamaBaseUrlInput.value.trim();
+        const ollamaModel = ollamaModelInput.value.trim();
+
+        ollamaError.textContent = '';
+        ollamaSuccess.textContent = '';
+
+        if (!ollamaBaseUrl) {
+          ollamaError.textContent = 'La URL de Ollama es obligatoria';
+          return;
+        }
+
+        testOllamaButton.disabled = true;
+        saveOllamaButton.disabled = true;
+        ollamaStatusDetail.className = 'status-detail';
+        ollamaStatusDetail.textContent = 'Probando conexión...';
+
+        try {
+          const previousBaseUrl = ollamaBaseUrlInput.value;
+          const previousSelectedModel = ollamaModelInput.dataset.selectedValue || ollamaModelInput.value;
+
+          ollamaBaseUrlInput.value = ollamaBaseUrl;
+          ollamaModelInput.dataset.selectedValue = ollamaModel || previousSelectedModel;
+
+          await loadOllamaHealth();
+
+          if (ollamaTitle.className === 'ok') {
+            ollamaSuccess.textContent = 'Conexión con Ollama correcta';
+          } else {
+            ollamaError.textContent = 'No pude conectar con Ollama usando esa URL';
+          }
+
+          ollamaBaseUrlInput.value = previousBaseUrl === ollamaBaseUrl ? ollamaBaseUrl : ollamaBaseUrl;
+        } catch (error) {
+          ollamaError.textContent = error.message || 'No pude probar la conexión con Ollama';
+        } finally {
+          testOllamaButton.disabled = false;
+          saveOllamaButton.disabled = false;
+        }
+      }
+
+      async function saveOllama() {
+        const ollamaBaseUrl = ollamaBaseUrlInput.value.trim();
+        const ollamaModel = ollamaModelInput.value.trim();
+        if (!ollamaBaseUrl || !ollamaModel) {
+          ollamaError.textContent = 'La URL y el modelo de Ollama son obligatorios';
+          return;
+        }
+
+        testOllamaButton.disabled = true;
+        saveOllamaButton.disabled = true;
+        ollamaError.textContent = '';
+        ollamaSuccess.textContent = '';
+
+        try {
+          const res = await fetch('/api/config-data/ollama', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ollamaBaseUrl, ollamaModel }),
+          });
+
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            ollamaError.textContent = data.error || 'No pude guardar la configuración de Ollama';
+            return;
+          }
+
+          ollamaBaseUrlInput.value = ollamaBaseUrl;
+          ollamaModelInput.dataset.selectedValue = ollamaModel;
+          setSelectOptions(ollamaModelInput, [], ollamaModel, 'Escribe o guarda un modelo');
+          ollamaSuccess.textContent = 'Configuración de Ollama guardada correctamente';
+          await loadConfigData();
+          await loadOllamaHealth();
+        } catch (error) {
+          ollamaError.textContent = error.message || 'No pude guardar la configuración de Ollama';
+        } finally {
+          testOllamaButton.disabled = false;
+          saveOllamaButton.disabled = false;
+        }
+      }
+
+      async function testRagEmbedConnection() {
+        const ragEmbedBaseUrl = ragEmbedBaseUrlInput.value.trim();
+        const ragEmbedModel = ragEmbedModelInput.value.trim();
+
+        ragEmbedError.textContent = '';
+        ragEmbedSuccess.textContent = '';
+
+        if (!ragEmbedBaseUrl) {
+          ragEmbedError.textContent = 'La URL de Ollama para embeddings es obligatoria';
+          return;
+        }
+
+        testRagEmbedButton.disabled = true;
+        saveRagEmbedButton.disabled = true;
+        ragEmbedStatusDetail.className = 'status-detail';
+        ragEmbedStatusDetail.textContent = 'Probando conexión...';
+
+        try {
+          const res = await fetch(`/api/rag-embed-health?baseUrl=${encodeURIComponent(ragEmbedBaseUrl)}`);
+          const data = await res.json();
+
+          if (!res.ok || !data.ok) {
+            ragEmbedTitle.className = 'bad';
+            ragEmbedStatusDetail.className = 'status-detail bad';
+            ragEmbedStatusDetail.textContent = data.error || `Error HTTP ${res.status}`;
+            ragEmbedError.textContent = data.error || 'No pude conectar con Ollama para embeddings';
+            return;
+          }
+
+          const models = Array.isArray(data.data?.models) ? data.data.models.map(x => x.name) : [];
+          ragEmbedTitle.className = 'ok';
+          ragEmbedStatusDetail.className = 'status-detail';
+          ragEmbedStatusDetail.textContent = models.length
+            ? `Modelos detectados: ${models.join(', ')}`
+            : 'Conectado correctamente';
+
+          ragEmbedModelInput.dataset.selectedValue = ragEmbedModel || ragEmbedModelInput.dataset.selectedValue || ragEmbedModelInput.value;
+          const preferredModel = models.includes(ragEmbedModel)
+            ? ragEmbedModel
+            : (models.includes('nomic-embed-text') ? 'nomic-embed-text' : (ragEmbedModel || models[0] || ''));
+          setSelectOptions(ragEmbedModelInput, models, preferredModel, 'Escribe o guarda un modelo');
+          ragEmbedSuccess.textContent = 'Conexión con Ollama embeddings correcta';
+        } catch (error) {
+          ragEmbedTitle.className = 'bad';
+          ragEmbedStatusDetail.className = 'status-detail bad';
+          ragEmbedStatusDetail.textContent = error.message || 'No disponible';
+          ragEmbedError.textContent = error.message || 'No pude probar la conexión de embeddings';
+        } finally {
+          testRagEmbedButton.disabled = false;
+          saveRagEmbedButton.disabled = false;
+        }
+      }
+
+      function formatRevectorizationSummary(revectorization) {
+        if (!revectorization) return '';
+        return `Revectorización completada: ${Number(revectorization.ok || 0)} OK, ${Number(revectorization.failed || 0)} con error, ${Number(revectorization.total || 0)} total.`;
+      }
+
+      async function saveRagEmbed() {
+        const ragEmbedBaseUrl = ragEmbedBaseUrlInput.value.trim();
+        const ragEmbedModel = ragEmbedModelInput.value.trim();
+        if (!ragEmbedBaseUrl || !ragEmbedModel) {
+          ragEmbedError.textContent = 'La URL y el modelo de embeddings son obligatorios';
+          return;
+        }
+
+        testRagEmbedButton.disabled = true;
+        saveRagEmbedButton.disabled = true;
+        revectorizeAllRagButton.disabled = true;
+        ragEmbedError.textContent = '';
+        ragEmbedSuccess.textContent = '';
+        ragSuccess.textContent = 'Guardando configuración de embeddings...';
+
+        try {
+          const res = await fetch('/api/config-data/rag-embed', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ragEmbedBaseUrl, ragEmbedModel }),
+          });
+
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            ragEmbedError.textContent = data.error || 'No pude guardar la configuración de embeddings';
+            return;
+          }
+
+          ragEmbedBaseUrlInput.value = ragEmbedBaseUrl;
+          ragEmbedModelInput.dataset.selectedValue = ragEmbedModel;
+          setSelectOptions(ragEmbedModelInput, [], ragEmbedModel, 'Escribe o guarda un modelo');
+          ragEmbedSuccess.textContent = data.modelChanged
+            ? `Configuración de embeddings guardada correctamente. ${formatRevectorizationSummary(data.revectorization)}`
+            : 'Configuración de embeddings guardada correctamente';
+          if (data.modelChanged && data.revectorization) {
+            ragSuccess.textContent = formatRevectorizationSummary(data.revectorization);
+          }
+          await loadConfigData();
+          await loadRagEmbedHealth();
+        } catch (error) {
+          ragEmbedError.textContent = error.message || 'No pude guardar la configuración de embeddings';
+        } finally {
+          testRagEmbedButton.disabled = false;
+          saveRagEmbedButton.disabled = false;
+          revectorizeAllRagButton.disabled = false;
+        }
+      }
+
+      async function revectorizeAllRagDocuments() {
+        testRagEmbedButton.disabled = true;
+        saveRagEmbedButton.disabled = true;
+        revectorizeAllRagButton.disabled = true;
+        ragError.textContent = '';
+        ragSuccess.textContent = '';
+        ragSuccess.textContent = 'Revectorizando todos los documentos...';
+
+        try {
+          const res = await fetch('/api/config-data/rag/revectorize-all', {
+            method: 'POST',
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            ragError.textContent = data.error || 'No pude revectorizar los documentos';
+            return;
+          }
+
+          const summary = formatRevectorizationSummary(data.revectorization);
+          ragSuccess.textContent = summary || 'Revectorización completada correctamente';
+          await loadConfigData();
+        } catch (error) {
+          ragError.textContent = error.message || 'No pude revectorizar los documentos';
+        } finally {
+          testRagEmbedButton.disabled = false;
+          saveRagEmbedButton.disabled = false;
+          revectorizeAllRagButton.disabled = false;
+        }
+      }
+
+      async function testProxyConnection() {
+        const proxyBaseUrl = proxyBaseUrlInput.value.trim();
+        const proxyModel = proxyModelInput.value.trim();
+
+        proxyError.textContent = '';
+        proxySuccess.textContent = '';
+
+        if (!proxyBaseUrl) {
+          proxyError.textContent = 'La URL del proxy es obligatoria';
+          return;
+        }
+
+        testProxyButton.disabled = true;
+        saveProxyButton.disabled = true;
+        proxyStatusDetail.className = 'status-detail';
+        proxyStatusDetail.textContent = 'Modelos detectados: cargando...';
+
+        try {
+          proxyBaseUrlInput.value = proxyBaseUrl;
+          proxyModelInput.dataset.selectedValue = proxyModel || proxyModelInput.dataset.selectedValue || proxyModelInput.value;
+
+          await loadProxyHealth();
+
+          if (proxyTitle.className === 'ok') {
+            proxySuccess.textContent = 'Conexión con el proxy correcta';
+          } else {
+            proxyError.textContent = 'No pude conectar con el proxy usando esa URL';
+          }
+        } catch (error) {
+          proxyError.textContent = error.message || 'No pude probar la conexión con el proxy';
+        } finally {
+          testProxyButton.disabled = false;
+          saveProxyButton.disabled = false;
+        }
+      }
+
+      async function saveProxy() {
+        const proxyBaseUrl = proxyBaseUrlInput.value.trim();
+        const proxyModel = proxyModelInput.value.trim();
+        if (!proxyBaseUrl || !proxyModel) {
+          proxyError.textContent = 'La URL y el modelo del proxy externo son obligatorios';
+          return;
+        }
+
+        testProxyButton.disabled = true;
+        saveProxyButton.disabled = true;
+        proxyError.textContent = '';
+        proxySuccess.textContent = '';
+
+        try {
+          const res = await fetch('/api/config-data/proxy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ proxyBaseUrl, proxyModel }),
+          });
+
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            proxyError.textContent = data.error || 'No pude guardar la configuración del proxy externo';
+            return;
+          }
+
+          proxyBaseUrlInput.value = proxyBaseUrl;
+          proxyModelInput.dataset.selectedValue = proxyModel;
+          setSelectOptions(proxyModelInput, [], proxyModel, 'Escribe o guarda un modelo');
+          proxySuccess.textContent = 'Configuración del proxy externo guardada correctamente';
+          await loadConfigData();
+          await loadProxyHealth();
+        } catch (error) {
+          proxyError.textContent = error.message || 'No pude guardar la configuración del proxy externo';
+        } finally {
+          testProxyButton.disabled = false;
+          saveProxyButton.disabled = false;
+        }
+      }
+
+      async function saveSinglePassPrompt() {
+        const prompt = singlePassPromptInput.value.trim();
+        if (!prompt) {
+          singlePassPromptError.textContent = 'El prompt no puede estar vacío';
+          return;
+        }
+
+        saveSinglePassPromptButton.disabled = true;
+        singlePassPromptError.textContent = '';
+        singlePassPromptSuccess.textContent = '';
+
+        try {
+          const res = await fetch('/api/config-data/single-pass-prompt', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt }),
+          });
+
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            singlePassPromptError.textContent = data.error || 'No pude guardar el prompt';
+            return;
+          }
+
+          singlePassPromptSuccess.textContent = 'Prompt guardado correctamente';
+          await loadConfigData();
+        } catch (error) {
+          singlePassPromptError.textContent = error.message || 'No pude guardar el prompt';
+        } finally {
+          saveSinglePassPromptButton.disabled = false;
+        }
+      }
+
+      async function saveMultiPassPrompts() {
+        const personaPrompt = multiPassPersonaPromptInput.value.trim();
+        const direccionPrompt = multiPassDireccionPromptInput.value.trim();
+        const referenciaPrompt = multiPassReferenciaPromptInput.value.trim();
+
+        if (!personaPrompt || !direccionPrompt || !referenciaPrompt) {
+          multiPassPromptsError.textContent = 'Ningún prompt multi-pass puede estar vacío';
+          return;
+        }
+
+        saveMultiPassPromptsButton.disabled = true;
+        multiPassPromptsError.textContent = '';
+        multiPassPromptsSuccess.textContent = '';
+
+        try {
+          const res = await fetch('/api/config-data/multi-pass-prompts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ personaPrompt, direccionPrompt, referenciaPrompt }),
+          });
+
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            multiPassPromptsError.textContent = data.error || 'No pude guardar los prompts multi-pass';
+            return;
+          }
+
+          multiPassPromptsSuccess.textContent = 'Prompts multi-pass guardados correctamente';
+          await loadConfigData();
+        } catch (error) {
+          multiPassPromptsError.textContent = error.message || 'No pude guardar los prompts multi-pass';
+        } finally {
+          saveMultiPassPromptsButton.disabled = false;
+        }
+      }
+
+      function parseAndValidateRegexRulesLocally() {
+        let rules;
+        try {
+          rules = JSON.parse(regexRulesInput.value);
+        } catch (_error) {
+          throw new Error('El JSON de reglas regex no es válido');
+        }
+
+        if (!Array.isArray(rules) || !rules.length) {
+          throw new Error('Debe haber al menos una regla regex');
+        }
+
+        for (const rule of rules) {
+          if (!rule || typeof rule !== 'object') throw new Error('Regla regex inválida');
+          if (!String(rule.name || '').trim()) throw new Error('Cada regla debe tener nombre');
+          if (!String(rule.pattern || '').trim()) throw new Error(`La regla ${rule.name || '(sin nombre)'} no tiene patrón`);
+          if (!String(rule.label || '').trim()) throw new Error(`La regla ${rule.name || '(sin nombre)'} no tiene etiqueta`);
+          try {
+            new RegExp(String(rule.pattern), String(rule.flags || ''));
+          } catch (error) {
+            throw new Error(`Regex inválida en ${rule.name || '(sin nombre)'}: ${error.message || error}`);
+          }
+        }
+
+        return rules;
+      }
+
+      function validateRegexRules() {
+        regexRulesError.textContent = '';
+        regexRulesSuccess.textContent = '';
+
+        try {
+          parseAndValidateRegexRulesLocally();
+          regexRulesSuccess.textContent = 'Sintaxis correcta';
+        } catch (error) {
+          regexRulesError.textContent = error.message || 'La sintaxis no es válida';
+        }
+      }
+
+      async function saveRegexRules() {
+        let rules;
+        try {
+          rules = parseAndValidateRegexRulesLocally();
+        } catch (error) {
+          regexRulesError.textContent = error.message || 'La sintaxis no es válida';
+          regexRulesSuccess.textContent = '';
+          return;
+        }
+
+        validateRegexRulesButton.disabled = true;
+        saveRegexRulesButton.disabled = true;
+        regexRulesError.textContent = '';
+        regexRulesSuccess.textContent = '';
+
+        try {
+          const res = await fetch('/api/config-data/regex-rules', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rules }),
+          });
+
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            regexRulesError.textContent = data.error || 'No pude guardar las reglas regex';
+            return;
+          }
+
+          regexRulesSuccess.textContent = 'Reglas regex guardadas correctamente';
+          await loadConfigData();
+        } catch (error) {
+          regexRulesError.textContent = error.message || 'No pude guardar las reglas regex';
+        } finally {
+          validateRegexRulesButton.disabled = false;
+          saveRegexRulesButton.disabled = false;
+        }
+      }
+
+      async function createRag() {
+        const label = newRagLabelInput.value.trim();
+        ragError.textContent = '';
+        ragSuccess.textContent = '';
+
+        if (!label) {
+          ragError.textContent = 'Escribe un nombre para el nuevo RAG';
+          return;
+        }
+
+        createRagButton.disabled = true;
+        try {
+          const res = await fetch('/api/config-data/rags', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ label }),
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            throw new Error(data.error || 'No pude crear el RAG');
+          }
+          newRagLabelInput.value = '';
+          ragSuccess.textContent = `RAG creado: ${data.rag?.label || label}`;
+          await loadConfigData();
+        } catch (error) {
+          ragError.textContent = error.message || 'No pude crear el RAG';
+        } finally {
+          createRagButton.disabled = false;
+        }
+      }
+
+      async function uploadRagFile(ragKey) {
+        const safeRagKey = String(ragKey || '');
+        const fileInput = Array.from(ragGroupsContainer.querySelectorAll('[data-rag-file]')).find(input => input.getAttribute('data-rag-file') === safeRagKey);
+        const uploadButton = Array.from(ragGroupsContainer.querySelectorAll('[data-rag-upload]')).find(button => button.getAttribute('data-rag-upload') === safeRagKey);
+        const file = fileInput?.files?.[0];
+        ragError.textContent = '';
+        ragSuccess.textContent = '';
+
+        if (!file) {
+          ragError.textContent = 'Selecciona un archivo .txt';
+          return;
+        }
+
+        const lowerName = String(file.name || '').toLowerCase();
+        if (!lowerName.endsWith('.txt')) {
+          ragError.textContent = 'Solo se permiten archivos .txt';
+          return;
+        }
+
+        if (uploadButton) uploadButton.disabled = true;
+        ragSuccess.textContent = 'Subiendo y vectorizando documento...';
+
+        try {
+          const formData = new FormData();
+          formData.append('ragFile', file);
+          formData.append('ragKey', safeRagKey);
+
+          const res = await fetch('/api/config-data/rag/upload', {
+            method: 'POST',
+            body: formData,
+          });
+
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            throw new Error(data.error || 'No pude subir el archivo');
+          }
+
+          if (fileInput) fileInput.value = '';
+          ragSuccess.textContent = `Archivo subido y vectorizado en ${data.rag?.label || safeRagKey}: ${data.file?.name || file.name}`;
+          await loadConfigData();
+        } catch (error) {
+          ragError.textContent = error.message || 'No pude subir el archivo';
+          await loadConfigData();
+        } finally {
+          if (uploadButton) uploadButton.disabled = false;
+        }
+      }
+
+      async function deleteRagFile(ragKey, filename, button) {
+        const safeRagKey = String(ragKey || '');
+        const safeFilename = String(filename || '');
+        ragError.textContent = '';
+        ragSuccess.textContent = '';
+
+        if (!safeRagKey || !safeFilename) {
+          ragError.textContent = 'No pude identificar el documento a eliminar';
+          return;
+        }
+
+        const confirmed = window.confirm(`¿Eliminar el documento "${safeFilename}"? También se borrará del índice SQLite del RAG.`);
+        if (!confirmed) return;
+
+        if (button) button.disabled = true;
+        ragSuccess.textContent = `Eliminando ${safeFilename} del RAG...`;
+
+        try {
+          const res = await fetch(`/api/config-data/rag/files/${encodeURIComponent(safeRagKey)}/${encodeURIComponent(safeFilename)}`, {
+            method: 'DELETE',
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            throw new Error(data.error || 'No pude eliminar el documento');
+          }
+
+          ragSuccess.textContent = `Documento eliminado: ${safeFilename}`;
+          await loadConfigData();
+        } catch (error) {
+          ragError.textContent = error.message || 'No pude eliminar el documento';
+          await loadConfigData();
+        } finally {
+          if (button) button.disabled = false;
+        }
+      }
+
+      async function deleteRagGroup(ragKey, ragLabel, button) {
+        const safeRagKey = String(ragKey || '');
+        const safeRagLabel = String(ragLabel || safeRagKey || 'RAG');
+        ragError.textContent = '';
+        ragSuccess.textContent = '';
+
+        if (!safeRagKey) {
+          ragError.textContent = 'No pude identificar el RAG a eliminar';
+          return;
+        }
+
+        const confirmed = window.confirm(`¿Eliminar el RAG "${safeRagLabel}"? Se borrarán su configuración, sus archivos subidos y su índice SQLite.`);
+        if (!confirmed) return;
+
+        if (button) button.disabled = true;
+        ragSuccess.textContent = `Eliminando RAG ${safeRagLabel}...`;
+
+        try {
+          const res = await fetch(`/api/config-data/rags/${encodeURIComponent(safeRagKey)}`, {
+            method: 'DELETE',
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            throw new Error(data.error || 'No pude eliminar el RAG');
+          }
+
+          ragSuccess.textContent = `RAG eliminado: ${safeRagLabel}`;
+          await loadConfigData();
+        } catch (error) {
+          ragError.textContent = error.message || 'No pude eliminar el RAG';
+          await loadConfigData();
+        } finally {
+          if (button) button.disabled = false;
+        }
+      }
+
+      async function logout() {
+        await fetch('/api/config-auth/logout', { method: 'POST' });
+        setAuthenticated(false);
+      }
+
+      loginButton.addEventListener('click', login);
+      passwordInput.addEventListener('keydown', event => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          login();
+        }
+      });
+      savePasswordButton.addEventListener('click', savePassword);
+      logoutButton.addEventListener('click', logout);
+      saveDocumentsButton.addEventListener('click', saveDocuments);
+      saveOpenAiCompatButton.addEventListener('click', saveOpenAiCompat);
+      newPasswordInput.addEventListener('keydown', event => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          savePassword();
+        }
+      });
+      testOllamaButton.addEventListener('click', testOllamaConnection);
+      saveOllamaButton.addEventListener('click', saveOllama);
+      testRagEmbedButton.addEventListener('click', testRagEmbedConnection);
+      saveRagEmbedButton.addEventListener('click', saveRagEmbed);
+      revectorizeAllRagButton.addEventListener('click', revectorizeAllRagDocuments);
+      testProxyButton.addEventListener('click', testProxyConnection);
+      saveProxyButton.addEventListener('click', saveProxy);
+      saveSinglePassPromptButton.addEventListener('click', saveSinglePassPrompt);
+      saveMultiPassPromptsButton.addEventListener('click', saveMultiPassPrompts);
+      validateRegexRulesButton.addEventListener('click', validateRegexRules);
+      saveRegexRulesButton.addEventListener('click', saveRegexRules);
+      createRagButton.addEventListener('click', createRag);
+      newRagLabelInput.addEventListener('keydown', event => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          createRag();
+        }
+      });
+
+      checkSession();
+    </script>
+  </body>
+</html>

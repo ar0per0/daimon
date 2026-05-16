@@ -1,0 +1,875 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Debug Daimon</title>
+    <link rel="icon" type="image/png" href="/assets/daimon-favicon.png" />
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 1200px; margin: 40px auto; padding: 0 16px; background: #0b1020; color: #e8ecf3; }
+      .title-with-logo { display: inline-flex; align-items: center; gap: 12px; }
+      .title-logo { width: 52px; height: 52px; object-fit: contain; flex: 0 0 auto; }
+      .card { background: #141b34; border: 1px solid #263056; border-radius: 16px; padding: 16px; margin-bottom: 16px; }
+      textarea { width: 100%; min-height: 100px; background: #0f1530; color: #fff; border: 1px solid #33406f; border-radius: 12px; padding: 12px; }
+      button { display: inline-block; background: #6ea8fe; color: #081120; border: 0; border-radius: 10px; padding: 10px 14px; font-weight: 600; cursor: pointer; }
+      button:disabled { opacity: 0.6; cursor: wait; }
+      input[type="file"] { display: none; }
+      .file-label { display: inline-block; background: #8fb6ff; color: #081120; border-radius: 10px; padding: 10px 14px; font-weight: 600; cursor: pointer; }
+      .file-label.disabled { opacity: 0.6; cursor: wait; pointer-events: none; }
+      pre { white-space: pre-wrap; background: #0f1530; padding: 12px; border-radius: 12px; }
+      .muted { color: #aeb9d6; }
+      .subtle-detail { color: #94a3c7; font-size: 13px; margin-left: 18px; }
+      .tab-badge { display: inline-block; margin-left: 12px; padding: 6px 10px; border-radius: 999px; background: #1a2448; border: 1px solid #33406f; color: #cfe0ff; font-size: 12px; vertical-align: middle; }
+      .mode-badge { display: none; margin-left: 10px; color: #ffd36e; font-size: 15px; font-weight: 700; vertical-align: middle; }
+      .mode-badge.visible { display: inline-block; }
+      .mode-badge.remote { color: #ff7a7a; }
+      .rag-active-badge { display: none; margin-left: 10px; color: #cbf6cf; background: rgba(102, 187, 106, 0.18); border: 1px solid rgba(102, 187, 106, 0.45); border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 700; vertical-align: middle; }
+      .rag-active-badge.visible { display: inline-block; }
+      .section-divider { border: 0; border-top: 1px solid #263056; margin: 14px 0; }
+      .status-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+      .status-badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; white-space: nowrap; background: rgba(58, 74, 126, 0.18); border: 1px solid rgba(58, 74, 126, 0.4); color: #dfe7ff; }
+      .status-badge.ok { color: #8ee28e; background: rgba(102, 187, 106, 0.18); border-color: rgba(102, 187, 106, 0.45); }
+      .status-badge.bad { color: #ff9a9a; background: rgba(199, 91, 91, 0.16); border-color: rgba(199, 91, 91, 0.4); }
+      .messages { display: grid; gap: 12px; }
+      .msg { padding: 12px; border-radius: 12px; }
+      .user { background: #1a2448; }
+      .assistant { background: #101a35; }
+      .msg-meta { color: #8e99bb; font-size: 12px; font-weight: 500; }
+      .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+      .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+      .hidden { display: none; }
+      .accordion { cursor: pointer; user-select: none; }
+      .loading { color: #ffd36e; }
+      .timeline { display: grid; gap: 10px; }
+      .timeline-step { background: #101a35; border: 1px solid #2d3a67; border-radius: 12px; padding: 12px; }
+      .timeline-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+      .timeline-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+      .tiny-button { background: #2a3a66; color: #dfe7ff; padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+      .timeline-step.done { border-color: #3f8f68; }
+      .timeline-step.active { border-color: #d5a94d; }
+      .timeline-step.proxy-raw { border-color: #d5a94d; }
+      .timeline-step.proxy-clean { border-color: #3f8f68; }
+      .timeline-step.local-send { border-color: #d5a94d; }
+      .timeline-step.local-reply { border-color: #d5a94d; }
+      .timeline-step.ollama-stage { border-color: #d5a94d; }
+      .timeline-step.remote-send { border-color: #c75b5b; }
+      .timeline-step.remote-reply { border-color: #c75b5b; }
+      .timeline-step.proxy-start { border-color: #c75b5b; }
+      .timeline-step.proxy-response { border-color: #c75b5b; }
+      .timeline-step.proxy-rebuild { border-color: #3f8f68; }
+      .timeline-step.rag-context { border-color: #63b37a; }
+      .timeline-step .meta { color: #aeb9d6; font-size: 12px; margin-top: 6px; }
+      @media (max-width: 1100px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <h1 class="title-with-logo"><img class="title-logo" src="/assets/daimon-logo.png" alt="Logo Daimon" />Debug Daimon <span id="tabBadge" class="tab-badge" title="Identificador del chat actual."></span><span id="modeBadge" class="mode-badge">LLM Local</span><span id="ragBadge" class="rag-active-badge">RAG activo</span></h1>
+
+    <div class="card">
+      <p>Este servicio protege tu privacidad al consultar LLM externos. Detecta y enmascara automáticamente los datos sensibles en múltiples fases, envía únicamente la versión anonimizada al modelo remoto y reconstruye la respuesta de forma local, restaurando el contexto original.</p>
+      <p class="muted">Pipeline: texto original → regex → Ollama → LLM Externo → reconstrucción local de la respuesta → texto final.</p>
+      <p class="muted">También puedes adjuntar documentación. El texto del documento se extrae localmente antes de pasar por el pipeline.</p>
+      <hr class="section-divider" />
+      <p class="muted" id="config">Cargando configuración...</p>
+      <div class="status-badges">
+        <span class="status-badge" id="localModelInfo">Cargando LLM Local...</span>
+        <span class="status-badge" id="externalModelInfo">Cargando LLM Externo...</span>
+        <span class="status-badge" id="ragEmbedModelInfo">Cargando Embeddings RAG...</span>
+      </div>
+      <p id="documentInfo" class="muted"></p>
+    </div>
+
+    <div class="card">
+      <button id="newChat" title="Abre un chat privado nuevo con un identificador y secreto local.">Nuevo chat</button>
+      <button id="makeChatPublic" title="Convierte este chat privado en público.">Hacer este chat público</button>
+      <span id="newRagChatButtons"></span>
+    </div>
+
+    <div class="card">
+      <div id="messages" class="messages"></div>
+    </div>
+
+    <div class="card">
+      <textarea id="message" placeholder="Escribe tu pregunta..."></textarea>
+      <p class="row">
+        <label class="file-label" for="document">Adjuntar documento</label>
+        <input id="document" type="file" accept=".txt,.md,.json,.csv,.log,.pdf" />
+        <button id="removeDocument" type="button">Quitar adjunto</button>
+        <label class="muted" title="En vez de una sola petición a Ollama, hace una por cada tipo de dato para mejorar la precisión."><input id="multiPass" type="checkbox" /> Usar modo detallado de Ollama</label>
+        <button id="send">Enviar</button>
+        <span id="loadingState" class="muted"></span>
+      </p>
+      <p id="selectedDocument" class="muted">Ningún archivo seleccionado.</p>
+    </div>
+
+    <div class="card">
+      <div class="accordion" id="togglePipeline">
+        <strong id="pipelineTitle">▼ Detalles locales del pipeline</strong>
+        <p class="muted">Pulsa aquí para expandir o contraer este bloque.</p>
+      </div>
+
+      <div id="pipelinePanel">
+        <div class="card">
+          <strong>Mapa de etiquetas local</strong>
+          <pre id="labelMapReply">Aún no hay etiquetas.</pre>
+        </div>
+
+        <div class="card">
+          <strong>Timeline del pipeline</strong>
+          <div id="pipelineTimeline" class="timeline">
+            <div class="muted">Aún no hay actividad.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <script>
+      let pipelineVisible = true;
+      let selectedDocument = null;
+      let timelineSteps = [];
+      const CHAT_ACCESS_STORAGE_KEY = 'daimon_chat_access';
+      let chatLocked = false;
+      let documentsEnabled = true;
+      let publicChatEnabled = true;
+      let deepModeVisible = true;
+      let currentChatMode = 'masked-local-remote';
+      let currentChatAccess = 'private';
+      let currentUseRag = false;
+      let currentRagBadgeLabel = 'RAG activo';
+      let availableRags = [];
+
+      function randomChatCode() {
+        if (window.crypto?.randomUUID) {
+          return window.crypto.randomUUID();
+        }
+        return `chat_${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}_${Math.random().toString(36).slice(2)}`;
+      }
+
+      function generateChatSecret() {
+        const bytes = new Uint8Array(24);
+        window.crypto.getRandomValues(bytes);
+        return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+      }
+
+      function getChatId() {
+        const url = new URL(window.location.href);
+        let chatId = (url.searchParams.get('chat') || '').trim();
+        if (!/^[a-zA-Z0-9_-]{4,120}$/.test(chatId)) {
+          chatId = randomChatCode();
+          url.searchParams.set('chat', chatId);
+          window.history.replaceState({}, '', url.toString());
+        }
+        return chatId;
+      }
+
+      function getChatAccessStore() {
+        try {
+          const raw = window.localStorage.getItem(CHAT_ACCESS_STORAGE_KEY);
+          const parsed = JSON.parse(raw || '{}');
+          return parsed && typeof parsed === 'object' ? parsed : {};
+        } catch {
+          return {};
+        }
+      }
+
+      function saveChatAccessStore(store) {
+        window.localStorage.setItem(CHAT_ACCESS_STORAGE_KEY, JSON.stringify(store || {}));
+      }
+
+      function saveChatAccess(chatId, access = {}) {
+        const store = getChatAccessStore();
+        store[chatId] = {
+          chatAccess: access.chatAccess === 'public' ? 'public' : 'private',
+          chatSecret: access.chatAccess === 'public' ? '' : String(access.chatSecret || '').trim(),
+        };
+        saveChatAccessStore(store);
+        return store[chatId];
+      }
+
+      function getChatAccess(chatId = getChatId()) {
+        const entry = getChatAccessStore()[chatId];
+        if (!entry || typeof entry !== 'object') return null;
+        return {
+          chatAccess: entry.chatAccess === 'public' ? 'public' : 'private',
+          chatSecret: entry.chatAccess === 'public' ? '' : String(entry.chatSecret || '').trim(),
+        };
+      }
+
+      function ensureChatAccess(chatId = getChatId(), options = {}) {
+        if (options.publicChat === true) {
+          return saveChatAccess(chatId, { chatAccess: 'public', chatSecret: '' });
+        }
+        const existing = getChatAccess(chatId);
+        if (existing?.chatAccess === 'private' && existing.chatSecret && !options.rotateSecret) {
+          return existing;
+        }
+        return saveChatAccess(chatId, { chatAccess: 'private', chatSecret: generateChatSecret() });
+      }
+
+      function buildChatHeaders(chatId = getChatId(), headersInit = {}) {
+        const headers = new Headers(headersInit || {});
+        const access = getChatAccess(chatId) || ensureChatAccess(chatId);
+        headers.set('X-Chat-Id', chatId);
+        headers.set('X-Chat-Access', access.chatAccess === 'public' ? 'public' : 'private');
+        if (access.chatAccess === 'private' && access.chatSecret) {
+          headers.set('X-Chat-Secret', access.chatSecret);
+        }
+        return headers;
+      }
+
+      function fetchWithChatScope(url, options = {}) {
+        const headers = buildChatHeaders(getChatId(), options.headers || {});
+        return fetch(url, { ...options, headers });
+      }
+
+      function renderTabBadge() {
+        const el = document.getElementById('tabBadge');
+        if (!el) return;
+        el.textContent = currentChatAccess === 'public'
+          ? `chat: ${getChatId()} · Público`
+          : `chat: ${getChatId()}`;
+      }
+
+      function updateMakePublicButton() {
+        const button = document.getElementById('makeChatPublic');
+        if (!button) return;
+        button.style.display = publicChatEnabled && currentChatAccess === 'private' ? '' : 'none';
+      }
+
+      function updateModeBadge() {
+        const el = document.getElementById('modeBadge');
+        if (el) {
+          const isLocal = currentChatMode === 'direct-local';
+          const isRemote = currentChatMode === 'direct-remote';
+          el.classList.toggle('visible', isLocal || isRemote);
+          el.classList.toggle('remote', isRemote);
+          el.textContent = isRemote ? 'LLM Externo' : 'LLM Local';
+        }
+        const ragBadge = document.getElementById('ragBadge');
+        if (ragBadge) {
+          ragBadge.classList.toggle('visible', !!currentUseRag);
+          ragBadge.textContent = currentRagBadgeLabel;
+        }
+      }
+
+      function escapeHtml(text) {
+        return String(text)
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;');
+      }
+
+      function buildTimingSummary(timings) {
+        if (!timings) return '';
+        return `Total: ${formatDuration(timings.totalMs || 0)} · Documento: ${formatDuration(timings.extractionMs || 0)} · Regex: ${formatDuration(timings.regexMs || 0)} · Proxy: ${formatDuration(timings.proxyMs || 0)}`;
+      }
+
+      function renderHistory(history, proxyHistory = []) {
+        const container = document.getElementById('messages');
+        if (!history || history.length === 0) {
+          container.innerHTML = '<p class="muted">Aún no hay conversación guardada en esta ventana.</p>';
+          return;
+        }
+
+        const proxyAssistantMessages = Array.isArray(proxyHistory)
+          ? proxyHistory.filter(msg => msg?.role === 'assistant')
+          : [];
+        let proxyAssistantIndex = 0;
+
+        container.innerHTML = history.map(msg => {
+          const timingSummary = msg.role === 'assistant' ? buildTimingSummary(msg.timings) : '';
+          const assistantProxyText = msg.role === 'assistant'
+            ? proxyAssistantMessages[proxyAssistantIndex++]?.content
+            : '';
+          const visibleContent = msg.role === 'assistant'
+            ? (assistantProxyText || msg.content || msg.displayContent)
+            : (msg.displayContent || msg.content);
+          return `
+            <div class="msg ${msg.role === 'user' ? 'user' : 'assistant'}">
+              <strong>${msg.role === 'user' ? 'Tú' : 'Asistente'}</strong>${timingSummary ? ` <span class="msg-meta">${escapeHtml(timingSummary)}</span>` : ''}
+              <pre>${escapeHtml(visibleContent)}</pre>
+            </div>
+          `;
+        }).join('');
+      }
+
+      function renderLabelMap(labelMap) {
+        const el = document.getElementById('labelMapReply');
+        const entries = Object.entries(labelMap || {});
+        if (entries.length === 0) {
+          el.textContent = 'Aún no hay etiquetas.';
+          return;
+        }
+        el.textContent = entries.map(([key, value]) => `${key} = ${value}`).join('\n');
+      }
+
+      function formatDuration(ms) {
+        const value = Number(ms || 0);
+        if (value < 1000) return `${value} ms`;
+        if (value < 60000) return `${(value / 1000).toFixed(value < 10000 ? 2 : 1)} s`;
+        const minutes = Math.floor(value / 60000);
+        const seconds = ((value % 60000) / 1000).toFixed(1);
+        return `${minutes} min ${seconds} s`;
+      }
+
+      function renderTimeline() {
+        const el = document.getElementById('pipelineTimeline');
+        if (!timelineSteps.length) {
+          el.innerHTML = '<div class="muted">Aún no hay actividad.</div>';
+          return;
+        }
+
+        el.innerHTML = timelineSteps.map((step, index) => `
+          <div class="timeline-step ${step.status || 'done'}">
+            <div class="timeline-header">
+              <strong>${escapeHtml(step.title || step.type || 'paso')}</strong>
+              <div class="timeline-actions">
+                ${step.copyPrompt ? `<button class="tiny-button" data-copy-prompt="${index}">${escapeHtml(step.copyLabel || 'Copiar prom')}</button>` : ''}
+              </div>
+            </div>
+            <pre>${escapeHtml(step.text || 'Sin detalle')}</pre>
+            <div class="meta">${escapeHtml(step.meta || '')}</div>
+          </div>
+        `).join('');
+
+        el.querySelectorAll('[data-copy-prompt]').forEach(button => {
+          button.addEventListener('click', async () => {
+            const stepIndex = Number(button.getAttribute('data-copy-prompt'));
+            const prompt = timelineSteps[stepIndex]?.copyPrompt || '';
+            if (!prompt) return;
+
+            const previous = button.textContent;
+            const copied = await copyTextToClipboard(prompt);
+            button.textContent = copied ? 'Copiado' : 'Error';
+            setTimeout(() => {
+              button.textContent = previous;
+            }, 1200);
+          });
+        });
+      }
+
+      async function copyTextToClipboard(text) {
+        const value = String(text || '');
+        if (!value) return false;
+
+        try {
+          if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(value);
+            return true;
+          }
+        } catch {
+        }
+
+        try {
+          const textarea = document.createElement('textarea');
+          textarea.value = value;
+          textarea.setAttribute('readonly', '');
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          textarea.style.pointerEvents = 'none';
+          document.body.appendChild(textarea);
+          textarea.focus();
+          textarea.select();
+          textarea.setSelectionRange(0, textarea.value.length);
+          const ok = document.execCommand('copy');
+          document.body.removeChild(textarea);
+          return ok;
+        } catch {
+          return false;
+        }
+      }
+
+      function pushTimelineStep(step) {
+        timelineSteps.push(step);
+        renderTimeline();
+      }
+
+      function resetTimeline() {
+        timelineSteps = [];
+        renderTimeline();
+      }
+
+      function updateDocumentsUi() {
+        const fileLabel = document.querySelector('label[for="document"]');
+        const fileInput = document.getElementById('document');
+        const removeButton = document.getElementById('removeDocument');
+        const selectedInfo = document.getElementById('selectedDocument');
+        if (fileLabel) fileLabel.style.display = documentsEnabled ? '' : 'none';
+        if (fileInput) fileInput.style.display = documentsEnabled ? '' : 'none';
+        if (removeButton) removeButton.style.display = documentsEnabled ? '' : 'none';
+        if (selectedInfo) selectedInfo.style.display = documentsEnabled ? '' : 'none';
+        if (!documentsEnabled) {
+          selectedDocument = null;
+          if (fileInput) fileInput.value = '';
+        }
+      }
+
+      function updateDeepModeUi() {
+        const multiPassLabel = document.querySelector('label:has(#multiPass)');
+        if (multiPassLabel) {
+          multiPassLabel.style.display = deepModeVisible ? '' : 'none';
+        }
+      }
+
+      function updateSelectedDocumentUi() {
+        const el = document.getElementById('selectedDocument');
+        if (!selectedDocument) {
+          el.textContent = 'Ningún archivo seleccionado.';
+          return;
+        }
+        el.textContent = `Adjunto: ${selectedDocument.name} (${Math.round(selectedDocument.size / 1024)} KB)`;
+      }
+
+      function renderRagChatButtons() {
+        const container = document.getElementById('newRagChatButtons');
+        if (!container) return;
+        const activeRags = (availableRags || []).filter(rag => rag.active !== false);
+        container.innerHTML = activeRags.map(rag => `<button data-rag-chat="${escapeHtml(rag.key)}" title="Abre un chat nuevo usando ${escapeHtml(rag.label)}.">Nuevo chat ${escapeHtml(rag.label)}</button>`).join(' ');
+        container.querySelectorAll('[data-rag-chat]').forEach(button => {
+          button.addEventListener('click', () => {
+            const ragKey = button.getAttribute('data-rag-chat') || '';
+            const rag = activeRags.find(item => item.key === ragKey);
+            if (rag) openNewChat(true, rag);
+          });
+        });
+      }
+
+      async function loadConfig() {
+        const res = await fetch('/api/config');
+        const data = await res.json();
+        document.getElementById('config').textContent = `Sanitizador activo: ${data.useOllamaSanitizer ? 'sí' : 'no'} | adjuntos máx: ${data.maxUploadMb} MB`;
+        availableRags = Array.isArray(data.rags) ? data.rags : [];
+        currentRagBadgeLabel = availableRags[0]?.label || 'Fuente privada';
+        publicChatEnabled = data.publicChatEnabled !== false;
+        updateMakePublicButton();
+        renderRagChatButtons();
+        updateModeBadge();
+        const localEl = document.getElementById('localModelInfo');
+        const externalEl = document.getElementById('externalModelInfo');
+        const ragEl = document.getElementById('ragEmbedModelInfo');
+        localEl.className = 'status-badge';
+        externalEl.className = 'status-badge';
+        ragEl.className = 'status-badge';
+        localEl.textContent = `LLM Local: ${data.ollamaModel}`;
+        externalEl.textContent = `LLM Externo: ${data.proxyModel}`;
+        ragEl.textContent = `Embeddings RAG: ${data.ragEmbedModel}`;
+      }
+
+      async function loadProxyHealth() {
+        const modelEl = document.getElementById('externalModelInfo');
+        try {
+          const res = await fetch('/api/proxy-health');
+          const data = await res.json();
+          if (data.ok) {
+            modelEl.className = 'status-badge ok';
+          } else {
+            modelEl.className = 'status-badge bad';
+          }
+        } catch (_error) {
+          modelEl.className = 'status-badge bad';
+        }
+      }
+
+      async function loadOllamaHealth() {
+        const modelEl = document.getElementById('localModelInfo');
+        try {
+          const res = await fetch('/api/ollama-health');
+          const data = await res.json();
+          if (data.ok) {
+            modelEl.className = 'status-badge ok';
+          } else {
+            modelEl.className = 'status-badge bad';
+          }
+        } catch (_error) {
+          modelEl.className = 'status-badge bad';
+        }
+      }
+
+      async function loadRagEmbedHealth() {
+        const modelEl = document.getElementById('ragEmbedModelInfo');
+        try {
+          const res = await fetch('/api/rag-embed-health');
+          const data = await res.json();
+          if (data.ok) {
+            modelEl.className = 'status-badge ok';
+          } else {
+            modelEl.className = 'status-badge bad';
+          }
+        } catch (_error) {
+          modelEl.className = 'status-badge bad';
+        }
+      }
+
+      async function loadHistory() {
+        const res = await fetchWithChatScope('/api/history');
+        const data = await res.json();
+        if (!res.ok || data?.ok === false) {
+          currentChatAccess = 'private';
+          renderTabBadge();
+          updateMakePublicButton();
+          renderHistory([], []);
+          renderLabelMap({});
+          document.getElementById('documentInfo').textContent = data?.error || 'Este chat privado solo se puede abrir desde el navegador que lo creó.';
+          return;
+        }
+        currentChatAccess = data.chatAccess === 'public' ? 'public' : 'private';
+        if (currentChatAccess === 'public') {
+          saveChatAccess(getChatId(), { chatAccess: 'public', chatSecret: '' });
+        } else {
+          ensureChatAccess(getChatId());
+        }
+        renderTabBadge();
+        updateMakePublicButton();
+        currentChatMode = data.chatMode || currentChatMode || 'masked-local-remote';
+        currentUseRag = !!data.useRag;
+        currentRagBadgeLabel = data.ragLabel || currentRagBadgeLabel || 'Fuente privada';
+        updateModeBadge();
+        renderHistory(data.history || [], data.proxyHistory || []);
+        renderLabelMap(data.labelMap || {});
+        document.getElementById('documentInfo').textContent = currentChatAccess === 'public'
+          ? 'Chat público: este enlace puede abrirse desde otros navegadores.'
+          : '';
+      }
+
+      async function saveCurrentChatSettings(settings = {}) {
+        const headers = buildChatHeaders(getChatId(), { 'Content-Type': 'application/json' });
+        const res = await fetch('/api/chat/settings', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(settings),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          throw new Error(data.error || 'No pude guardar la configuración del chat');
+        }
+        currentChatAccess = data.chatAccess === 'public' ? 'public' : 'private';
+        saveChatAccess(getChatId(), {
+          chatAccess: currentChatAccess,
+          chatSecret: currentChatAccess === 'public' ? '' : (getChatAccess(getChatId())?.chatSecret || ensureChatAccess(getChatId()).chatSecret || ''),
+        });
+        renderTabBadge();
+        updateMakePublicButton();
+        currentUseRag = !!data.settings?.useRag;
+        currentRagBadgeLabel = data.rag?.label || currentRagBadgeLabel;
+      }
+
+      async function makeCurrentChatPublic() {
+        if (currentChatAccess === 'public') return;
+        await saveCurrentChatSettings({ useRag: currentUseRag, chatMode: currentChatMode, chatAccess: 'public' });
+        currentChatAccess = 'public';
+        saveChatAccess(getChatId(), { chatAccess: 'public', chatSecret: '' });
+        renderTabBadge();
+        updateMakePublicButton();
+        document.getElementById('documentInfo').textContent = 'Chat público: este enlace puede abrirse desde otros navegadores.';
+      }
+
+      function updateChatLockUi() {
+        const sendButton = document.getElementById('send');
+        const loadingState = document.getElementById('loadingState');
+        if (chatLocked) {
+          sendButton.disabled = true;
+          loadingState.className = 'bad';
+          loadingState.textContent = 'Este chat quedó bloqueado por límite del proxy. Abre un chat nuevo para continuar.';
+          return;
+        }
+        if (!loadingState.textContent || loadingState.className === 'bad') {
+          loadingState.className = 'muted';
+          loadingState.textContent = '';
+        }
+      }
+
+      async function openNewChat(useRag = false, rag = null, publicChat = false) {
+        const url = new URL(window.location.href);
+        const chatId = randomChatCode();
+        url.searchParams.set('chat', chatId);
+        window.history.replaceState({}, '', url.toString());
+        ensureChatAccess(chatId, { publicChat, rotateSecret: true });
+        currentChatAccess = publicChat ? 'public' : 'private';
+        renderTabBadge();
+        resetTimeline();
+        chatLocked = false;
+        await saveCurrentChatSettings({ useRag, ragKey: useRag ? (rag?.key || '') : '', chatMode: currentChatMode, chatAccess: currentChatAccess });
+        if (useRag && rag?.label) currentRagBadgeLabel = rag.label;
+        await loadHistory();
+        updateChatLockUi();
+      }
+
+      function togglePipeline() {
+        pipelineVisible = !pipelineVisible;
+        document.getElementById('pipelinePanel').classList.toggle('hidden', !pipelineVisible);
+        document.getElementById('pipelineTitle').textContent = pipelineVisible
+          ? '▼ Detalles locales del pipeline'
+          : '▶ Detalles locales del pipeline';
+      }
+
+      async function sendMessage() {
+        const input = document.getElementById('message');
+        const sendButton = document.getElementById('send');
+        const removeDocumentButton = document.getElementById('removeDocument');
+        const multiPassCheckbox = document.getElementById('multiPass');
+        const fileLabel = document.querySelector('label[for="document"]');
+        const loadingState = document.getElementById('loadingState');
+        const message = input.value.trim();
+        if (!message || sendButton.disabled || chatLocked) return;
+
+        input.value = '';
+        sendButton.disabled = true;
+        removeDocumentButton.disabled = true;
+        multiPassCheckbox.disabled = true;
+        fileLabel?.classList.add('disabled');
+        loadingState.className = 'loading';
+        loadingState.textContent = 'Enviando, procesando y esperando respuesta...';
+
+        const currentMessages = document.getElementById('messages');
+        currentMessages.innerHTML += `
+          <div class="msg user">
+            <strong>Tú</strong>
+            <pre>${escapeHtml(message)}${selectedDocument ? `\n\n[Documento adjunto: ${escapeHtml(selectedDocument.name)}]` : ''}</pre>
+          </div>
+        `;
+
+        document.getElementById('documentInfo').textContent = selectedDocument ? `Procesando documento: ${selectedDocument.name}` : '';
+
+        try {
+          const formData = new FormData();
+          formData.append('message', message);
+          if (selectedDocument) {
+            formData.append('document', selectedDocument);
+          }
+          formData.append('singlePass', String(!multiPassCheckbox.checked));
+
+          resetTimeline();
+          const res = await fetchWithChatScope('/api/chat', {
+            method: 'POST',
+            body: formData,
+          });
+
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+          let finalData = null;
+          let lastError = null;
+
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+              if (!line.trim()) continue;
+              const event = JSON.parse(line);
+
+              if (event.type === 'document') {
+                document.getElementById('documentInfo').textContent = event.attached
+                  ? `Documento procesado: ${event.name} · método: ${event.method} · chars: ${event.chars}`
+                  : '';
+                pushTimelineStep({
+                  title: event.title || 'Extracción de documento',
+                  text: event.attached ? `Nombre: ${event.name}\nMétodo: ${event.method}\nChars: ${event.chars}` : '',
+                  meta: `Tiempo: ${formatDuration(event.durationMs)}`,
+                  status: 'done',
+                });
+              }
+
+              if (event.type === 'regex') {
+                pushTimelineStep({
+                  title: event.title || 'Texto tras regex',
+                  text: `Detectado por regex:\n${event.detectedText || 'Sin coincidencias detectadas por regex.'}\n\nTexto transformado:\n${event.text || 'Sin salida regex'}`,
+                  meta: `Tiempo: ${formatDuration(event.durationMs)}`,
+                  status: 'done',
+                });
+              }
+
+              if (event.type === 'ollama-stage') {
+                renderLabelMap(event.labelMap || {});
+                pushTimelineStep({
+                  title: event.title || `Ollama · ${event.stage}`,
+                  text: `${event.rawResponse || 'NINGUNO'}\n\nTexto tras reemplazo:\n${event.text || ''}`,
+                  meta: `Tiempo: ${formatDuration(event.durationMs)}`,
+                  status: 'ollama-stage',
+                  copyPrompt: event.prompt || '',
+                  copyLabel: 'Copiar prom',
+                });
+              }
+
+              if (event.type === 'local-direct-start') {
+                pushTimelineStep({
+                  title: event.title || 'Enviando a Ollama',
+                  text: event.text || 'Enviando mensaje directamente al LLM local',
+                  meta: 'Esperando respuesta...',
+                  status: 'local-send',
+                });
+              }
+
+              if (event.type === 'local-direct-done') {
+                pushTimelineStep({
+                  title: event.title || 'Respuesta de Ollama',
+                  text: event.text || 'Sin respuesta del LLM local',
+                  meta: `Tiempo: ${formatDuration(event.durationMs)}`,
+                  status: 'local-reply',
+                });
+              }
+
+              if (event.type === 'remote-direct-start') {
+                pushTimelineStep({
+                  title: event.title || 'Enviando al LLM Externo',
+                  text: event.text || 'Enviando mensaje directamente al LLM externo',
+                  meta: 'Esperando respuesta...',
+                  status: 'remote-send',
+                });
+              }
+
+              if (event.type === 'remote-direct-done') {
+                pushTimelineStep({
+                  title: event.title || 'Respuesta del LLM Externo',
+                  text: event.text || 'Sin respuesta del LLM externo',
+                  meta: `Tiempo: ${formatDuration(event.durationMs)}`,
+                  status: 'remote-reply',
+                });
+              }
+
+              if (event.type === 'rag-context') {
+                const formatSources = sources => Array.isArray(sources) && sources.length
+                  ? sources.map(source => source === 'vector' ? 'vectorial' : source === 'lexical' ? 'léxico' : source).join(' + ')
+                  : 'desconocido';
+                pushTimelineStep({
+                  title: event.title || 'Contexto RAG recuperado',
+                  text: Array.isArray(event.chunks) && event.chunks.length
+                    ? event.chunks.map((chunk, index) => {
+                      const meta = [
+                        `documento: ${chunk.document}`,
+                        `chunk: ${chunk.chunkIndex}`,
+                        chunk.distance != null ? `distancia: ${Number(chunk.distance || 0).toFixed(4)}` : null,
+                        chunk.lexicalRank != null ? `score léxico: ${Number(chunk.lexicalRank || 0).toExponential(2)}` : null,
+                        chunk.hybridScore != null ? `score híbrido: ${Number(chunk.hybridScore || 0).toFixed(4)}` : null,
+                        chunk.finalScore != null ? `score final: ${Number(chunk.finalScore || 0).toFixed(4)}` : null,
+                        chunk.heuristicAdjustment != null ? `ajuste heurístico: ${Number(chunk.heuristicAdjustment || 0).toFixed(4)}` : null,
+                        chunk.exactMatchCount != null ? `matches exactos: ${chunk.exactMatchCount}` : null,
+                        chunk.coverageRatio != null ? `cobertura: ${Math.round(Number(chunk.coverageRatio || 0) * 100)}%` : null,
+                        Array.isArray(chunk.exactTerms) && chunk.exactTerms.length ? `términos: ${chunk.exactTerms.join(', ')}` : null,
+                        `origen: ${formatSources(chunk.sources)}`,
+                      ].filter(Boolean).join(' · ');
+                      return `[fragmento ${index + 1}] ${meta}\n${chunk.text || ''}`;
+                    }).join('\n\n')
+                    : (event.fallbackMessage || 'No se recuperaron fragmentos RAG para esta consulta.'),
+                  meta: `Tiempo: ${formatDuration(event.durationMs)} · Fragmentos usados: ${event.count || 0}${event.rawCount != null ? ` · candidatos: ${event.rawCount}` : ''}${event.confidenceLevel ? ` · confianza: ${event.confidenceLevel}` : ''}${event.confidenceReason ? ` · motivo: ${event.confidenceReason}` : ''}`,
+                  status: 'rag-context',
+                });
+              }
+
+              if (event.type === 'proxy-start') {
+                pushTimelineStep({
+                  title: event.title || 'Enviando al proxy online',
+                  text: event.text || 'Enviando texto anonimizado al modelo online',
+                  meta: 'Esperando respuesta...',
+                  status: 'proxy-start',
+                  copyPrompt: event.prompt || '',
+                  copyLabel: 'Copiar payload proxy',
+                });
+              }
+
+              if (event.type === 'proxy-done') {
+                pushTimelineStep({
+                  title: 'Texto exacto devuelto por el proxy',
+                  text: event.text || 'Sin respuesta final',
+                  meta: `Tiempo: ${formatDuration(event.durationMs)}`,
+                  status: 'proxy-response',
+                });
+
+                pushTimelineStep({
+                  title: 'Texto reconstruido localmente tras la respuesta del proxy',
+                  text: event.displayResponse || event.text || 'Sin respuesta final',
+                  meta: `Tiempo: ${formatDuration(event.localRebuildDurationMs || 0)}`,
+                  status: 'proxy-rebuild',
+                });
+              }
+
+              if (event.type === 'complete') {
+                finalData = event;
+              }
+
+              if (event.type === 'error') {
+                lastError = event;
+                if (event.lockChat) {
+                  chatLocked = true;
+                }
+                pushTimelineStep({ title: 'Error', text: event.error || 'Error desconocido', meta: '', status: 'done' });
+              }
+            }
+          }
+
+          if (finalData?.history) {
+            renderHistory(finalData.history, finalData.proxyHistory || []);
+            renderLabelMap(finalData.labelMap || {});
+            pushTimelineStep({
+              title: 'Pipeline completado',
+              text: 'Respuesta generada correctamente.',
+              meta: `Total: ${formatDuration(finalData.timings?.totalMs || 0)} · Documento: ${formatDuration(finalData.timings?.extractionMs || 0)} · Regex: ${formatDuration(finalData.timings?.regexMs || 0)} · Proxy: ${formatDuration(finalData.timings?.proxyMs || 0)}`,
+              status: 'done',
+            });
+          } else if (lastError) {
+            currentMessages.innerHTML += `
+              <div class="msg assistant">
+                <strong>Asistente</strong>
+                <pre>${escapeHtml(lastError.error || 'Error desconocido')}</pre>
+              </div>
+            `;
+            updateChatLockUi();
+          }
+        } finally {
+          selectedDocument = null;
+          document.getElementById('document').value = '';
+          updateSelectedDocumentUi();
+          if (!document.getElementById('documentInfo').textContent.startsWith('Documento procesado:')) {
+            document.getElementById('documentInfo').textContent = '';
+          }
+          sendButton.disabled = false;
+          removeDocumentButton.disabled = false;
+          multiPassCheckbox.disabled = false;
+          fileLabel?.classList.remove('disabled');
+          if (!chatLocked) {
+            loadingState.className = 'muted';
+            loadingState.textContent = '';
+          }
+        }
+      }
+
+      document.getElementById('send').addEventListener('click', sendMessage);
+      document.getElementById('newChat').addEventListener('click', () => openNewChat(false, null, false));
+      document.getElementById('makeChatPublic').addEventListener('click', () => makeCurrentChatPublic());
+      document.getElementById('togglePipeline').addEventListener('click', togglePipeline);
+      document.getElementById('document').addEventListener('change', event => {
+        selectedDocument = event.target.files?.[0] || null;
+        updateSelectedDocumentUi();
+      });
+      document.getElementById('removeDocument').addEventListener('click', () => {
+        selectedDocument = null;
+        document.getElementById('document').value = '';
+        updateSelectedDocumentUi();
+        document.getElementById('documentInfo').textContent = '';
+      });
+
+      (async () => {
+        ensureChatAccess(getChatId());
+        renderTabBadge();
+        updateMakePublicButton();
+        await loadConfig();
+        const res = await fetch('/api/config');
+        const data = await res.json();
+        documentsEnabled = data.documentsEnabled !== false;
+        deepModeVisible = data.deepModeEnabled !== false;
+        updateDocumentsUi();
+        updateDeepModeUi();
+        updateChatLockUi();
+        await loadProxyHealth();
+        await loadOllamaHealth();
+        await loadRagEmbedHealth();
+        await loadHistory();
+        updateSelectedDocumentUi();
+      })();
+    </script>
+  </body>
+</html>

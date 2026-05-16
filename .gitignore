@@ -1,0 +1,10 @@
+node_modules/
+/data/*
+!/data/chats/
+!/data/chats/**
+!/data/rag/
+!/data/rag/**
+npm-debug.log*
+.DS_Store
+.env
+.env.*

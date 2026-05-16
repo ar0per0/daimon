@@ -1,0 +1,22 @@
+services:
+  openai-oauth:
+    container_name: openai-oauth
+    image: ar0per0/openai-oauth
+    restart: unless-stopped
+    ports:
+      - "10531:10531"
+    volumes:
+      - openai-oauth:/data
+
+  daimon:
+    container_name: daimon
+    image: ar0per0/daimon
+    restart: unless-stopped
+    ports:
+      - "3010:3010"
+    volumes:
+      - daimon:/app/data
+
+volumes:
+  openai-oauth:
+  daimon:
